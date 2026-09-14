@@ -151,10 +151,21 @@ gateway". Three things follow:
 * **Azure's content filter still applies.** The request still ends at the same Azure
   deployment, so the prompt shield above behaves exactly as before; the gateway forwards the
   400 unchanged and the app still classifies it as *filtered*.
-* **Two quotas, not one.** A 429 can now come from the virtual key's limit in Bifrost *or*
-  from the Azure deployment's TPM behind it. `scripts/check_llm.py` says which to look at.
-* **The app keeps its own retries.** Bifrost can also retry and fall back across keys. Leave
-  fallbacks off for this virtual key so a rate-limited call is not retried twice over.
+* **The virtual key's request limit is the quota that bites.** The group stage runs at roughly
+  230 requests/min at concurrency 5 and 460 at the configured 10. A virtual key created with
+  Bifrost's default of 100
+  requests/min produced 157 retries and 19 lost turns in a 15-team dry run; the Azure deployment
+  behind the gateway (1,000,000 TPM, 1,000 RPM, Sweden Central) never came close to its limit.
+  Set the key's request limit to at least 1,000/min before the day. These 429s carry no
+  `Retry-After`, so the app's global cooldown never engages behind the gateway; the exponential
+  backoff is all there is. The error body says `is_bifrost_error: False` even for a virtual-key
+  limit, so do not read that flag as "Azure's fault".
+* **The app keeps its own retries.** Retries in Bifrost are a per-provider setting (Azure →
+  Edit Provider Config → network config, `max_retries`, default 0) and fallbacks only happen when
+  the request body asks for them, which this app never does. Leave both as they are.
+* **`reasoning_effort` must be `none`, not `minimal`.** Bifrost rewrites `minimal` to `low`
+  before forwarding. Measured over 210 duels that meant 27-46 hidden reasoning tokens per turn,
+  20 empty replies and a 1.72s median (0.76s straight at Azure). `none` is honoured on both paths.
 
 Switching models is now an `.env` change: `BIFROST_MODEL=openai/gpt-5.4-mini` would go to
 OpenAI directly (and lose the Azure prompt shield, which changes the Gatekeeper game). Any
@@ -324,6 +335,20 @@ The conclusion: the deployment is fast and follows the format well; the binding 
 TPM quota. `llm.max_concurrency` and `max_concurrent_duels` were dropped to **5** as a result.
 Check the deployment's TPM in Foundry → Deployments and raise it there before raising these —
 quota, not parallelism, is what buys you speed.
+
+#### Behind the Bifrost gateway (gpt-5.4-mini, `reasoning_effort: none`, key at 1000 req/min)
+
+| | concurrency 5 | concurrency 10 |
+|---|---|---|
+| Group stage, 15 teams | 184s | **99s** |
+| Median / p95 latency | 1.10s / 1.56s | 1.12s / 1.59s |
+| Requests per minute | ~250 | ~460 |
+| Retries / turns lost / empty replies | 0 / 0 / 0 | 0 / 0 / 0 |
+| Action-format compliance | 98% | 99% |
+
+The deployment behind the gateway has 1M TPM, so parallelism is free until the virtual key's
+request limit is in sight. Concurrency is set to **10**; 15 would run at ~700 req/min against
+a 1000/min key with practice duels sharing the same semaphore, which is too little margin.
 
 Rough budget: 210 duels × ~5 delivered calls ≈ 1000–1300 calls and ~400k tokens for the group
 stage, plus practice duels and Gatekeeper attacks. The admin panel tracks calls, tokens, latency

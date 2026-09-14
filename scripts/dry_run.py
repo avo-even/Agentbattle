@@ -206,7 +206,7 @@ def report(state, neg, elapsed: float) -> None:
     if stats["recent_errors"]:
         print("  recent errors:")
         for e in stats["recent_errors"]:
-            print(f"    - {e['label']}: {e['message'][:120]}")
+            print(f"    - {e['label']}: {e['message']}")   # full text: the body says which limit fired
 
     print("\n=== LEADERBOARD ===")
     for e in state.leaderboard():

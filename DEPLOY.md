@@ -71,7 +71,7 @@ flowchart LR
     API <--> State
     State -.->|save / resume| Snap
     Secrets -.->|secretRef env vars| API
-    API -->|"HTTPS · API key<br/>≤ 5 concurrent calls"| AOAI
+    API -->|"HTTPS · API key<br/>≤ 10 concurrent calls"| AOAI
     ACR -->|pull image| App
     App -->|logs| LAW
     Dev -->|build image| ACR
@@ -93,7 +93,7 @@ What the infra owner should know:
   events; anything placed in front of the ingress (WAF, proxy) has to pass
   them through unbuffered.
 * **The binding constraint is the OpenAI TPM quota, not compute.** The app
-  caps itself at 5 concurrent model calls (`llm.max_concurrency`) to stay
+  caps itself at 10 concurrent model calls (`llm.max_concurrency`) to stay
   around 70 % of the 200k TPM quota. Raise the quota in Foundry to go faster.
 * **Access control is application-level**: a join code for students and an
   admin code for the facilitator. No Entra login in front of the app.

@@ -61,10 +61,16 @@ def diagnose(exc: Exception) -> str:
                 "or a network rule is blocking you.")
     if status == 404 or "404" in text or "deploymentnotfound" in text or "resource not found" in text:
         if via_gateway:
-            return ("BIFROST_MODEL is not routable. It must be '<provider>/<model>' (e.g. "
-                    "azure/gpt-5.4-mini), the provider must be configured in Bifrost, and for "
-                    "Azure the part after the slash must be the deployment name (or an alias "
-                    "on the Azure key). Also check BIFROST_BASE_URL has no extra path.")
+            if "cognitiveservices.azure.com" in config.BIFROST_BASE_URL or "openai.azure.com" in config.BIFROST_BASE_URL:
+                return ("BIFROST_BASE_URL points at an Azure resource, not at the gateway. That "
+                        "endpoint belongs in Bifrost's Azure provider config; here you want the "
+                        "origin of the Bifrost server itself (the host of its web UI).")
+            return ("A 404 with the gateway URL set usually means BIFROST_MODEL is not routable: "
+                    "it must be '<provider>/<model>' (e.g. azure/gpt-5.4-mini), the provider "
+                    "must be configured in Bifrost, and for Azure the part after the slash must "
+                    "be the deployment name (or an alias on the Azure key). If the 404 body looks "
+                    "like Azure's own ('Resource not found'), the base URL is a provider "
+                    "endpoint rather than the gateway.")
         return ("AZURE_OPENAI_DEPLOYMENT does not exist on this resource, OR the endpoint "
                 "includes a path (it must be just https://<resource>.openai.azure.com), OR "
                 "AZURE_OPENAI_API_VERSION is not supported. Check Foundry → Deployments for "
@@ -172,7 +178,13 @@ async def main() -> int:
     parsed = parse_action(reply, pot=int(cfg("negotiation.pot", 100)))
     print(f"  raw reply: {reply.strip()[:200]!r}")
     backend = llm.backend()
-    if getattr(backend, "_use_max_completion", False) or not getattr(backend, "_send_temperature", True):
+    # Only worth saying if the client had to discover this itself; if config.yaml
+    # already pins the same values there was no wasted call to save.
+    adapted = (
+        getattr(backend, "_use_max_completion", False) != bool(cfg("llm.use_max_completion_tokens", False))
+        or getattr(backend, "_send_temperature", True) != bool(cfg("llm.send_temperature", True))
+    )
+    if adapted:
         print("  ℹ This deployment rejected standard parameters and the client adapted. Pin it in")
         print("    config.yaml to save two wasted calls per restart:")
         print(f"      llm.use_max_completion_tokens: {getattr(backend, '_use_max_completion', False)}")
@@ -201,7 +213,8 @@ async def main() -> int:
     if projected > 420:
         print("  ✗ Too slow. A duel's 6 calls are sequential, so latency multiplies out.")
         print("    Fix by, in order of preference: a faster (non-reasoning) deployment;")
-        print("    reasoning effort set to minimal; or a higher llm.max_concurrent_duels")
+        print("    reasoning effort set to none (not minimal: Bifrost rewrites that to low);")
+        print("    or a higher llm.max_concurrent_duels")
         print("    if your TPM quota can take it.")
     elif projected > 240:
         print("  ⚠ Workable but slow enough to be noticed. Consider raising concurrency.")

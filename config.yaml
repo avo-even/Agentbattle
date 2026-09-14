@@ -26,17 +26,22 @@ llm:
   max_tokens: 400
   temperature: 0.7
   timeout_s: 30
-  # MEASURED against gpt-5.4-mini in swedencentral: concurrency 15 produced a
-  # 429 storm — 730 successful calls cost 1557 attempts and 164 turns were lost
-  # outright. The binding constraint is the deployment's TPM quota, NOT model
-  # speed (median latency is 0.76s). Raise TPM in Foundry before raising these.
-  # Concurrency 5 measured at ~139k tokens/min = 70% of the 200k quota, with
-  # 3 absorbed 429s and zero lost turns across 210 duels. The remaining 30% is
-  # deliberate headroom: on the day, practice duels share this same semaphore.
-  max_concurrency: 5       # global cap on in-flight LLM calls
-  max_concurrent_duels: 5  # cap on duels running at once
+  # MEASURED. Straight at the 200k-TPM ntnu deployment, concurrency 15 was a
+  # 429 storm (730 ok calls cost 1557 attempts, 164 turns lost) and 5 was the
+  # safe setting. Behind Bifrost the deployment has 1M TPM / 1000 RPM and the
+  # virtual key allows 1000 requests/min, so the constraint moved:
+  #   concurrency  5 -> 184s group stage, ~250 req/min, 147k tok/min, 0 retries
+  #   concurrency 10 ->  99s group stage, ~460 req/min, 269k tok/min, 0 retries
+  # Median latency stayed at 1.1s, so 10 halves the wall clock for free. Not
+  # higher: 15 would sit at ~700 req/min against the 1000/min key limit, and on
+  # the day practice duels and Gatekeeper attacks share this same semaphore.
+  # If the key's request limit is ever lowered again, drop these back to 5.
+  max_concurrency: 10      # global cap on in-flight LLM calls
+  max_concurrent_duels: 10 # cap on duels running at once
   retries: 5
-  tpm_quota: 200000        # Foundry deployment quota; used for the headroom report
+  # Behind Bifrost the deployment (ai-felles-resource, swedencentral) advertises
+  # x-ratelimit-limit-tokens: 1000000. The direct ntnu deployment has 200000.
+  tpm_quota: 1000000       # deployment quota; used only for the headroom report
   backoff_base_s: 1.5
   # The three settings below were confirmed against gpt-5.4-mini with
   # scripts/check_llm.py. Re-run it if you change the deployment.
@@ -44,9 +49,12 @@ llm:
   use_max_completion_tokens: true # this deployment rejects max_tokens
   # Reasoning models spend their token budget thinking before they speak, which
   # here is pure latency — a negotiation turn is 300 characters, not a proof.
-  # Measured: "" -> 4.66s/call, "minimal" -> 3.38s/call.
-  # "" omits the parameter. Unsupported values are detected and dropped.
-  reasoning_effort: "minimal"
+  # "none" is the value that survives the Bifrost gateway: Bifrost rewrites
+  # "minimal" to "low" before forwarding, and "low" measured 27-46 hidden
+  # reasoning tokens per turn, 20 empty replies and 1.72s median in a 210-duel
+  # run (vs 0 / 0 / 0.76s straight at Azure). "none" gives 0 reasoning tokens
+  # on both paths. "" omits the parameter. Unsupported values are dropped.
+  reasoning_effort: "none"
   mock_latency_s: 0.05
 
 gatekeeper:
