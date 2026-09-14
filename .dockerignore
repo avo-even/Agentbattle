@@ -1,0 +1,15 @@
+# Secrets must never be baked into the image — they arrive as Container App
+# secrets at runtime. This line is the important one in this file.
+.env
+
+.venv/
+snapshot.json
+__pycache__/
+*.pyc
+.pytest_cache/
+.git/
+.gitignore
+.claude/
+tests/
+README.md
+DEPLOY.md

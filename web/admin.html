@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avo AI Lab — Facilitator Cockpit</title>
+<style>
+  :root{
+    /* --- Avo brand palette ------------------------------------------- */
+    --avo-offwhite:#FAF8F5; --avo-black:#000000; --avo-pink:#FFC7ED;
+    --avo-black-70:#4A4A49; --avo-black-50:#7C7B7A; --avo-black-20:#C8C7C4;
+    --avo-burgund:#5A0B25; --avo-red:#FF5150; --avo-orange:#FF8B60; --avo-orange-lt:#FFD0BF;
+    --avo-marin:#011D46;   --avo-blue:#6080FF; --avo-sky:#ADBDFF;   --avo-sky-lt:#DEE5FF;
+    --avo-forest:#00452F;  --avo-emerald:#00D080; --avo-green:#6DFF83; --avo-green-lt:#C4FFCD;
+
+    /* --- semantic roles (light surface: off-white bg, black ink) ------ */
+    --bg:var(--avo-offwhite); --panel:#FFFFFF; --panel2:var(--avo-offwhite);
+    --line:var(--avo-black-20); --text:var(--avo-black); --muted:var(--avo-black-70);
+    --accent:var(--avo-pink); --accent-ink:var(--avo-burgund);
+    --hot:var(--avo-orange); --hot-soft:var(--avo-orange-lt);
+    --danger:var(--avo-red); --danger-ink:var(--avo-burgund);
+    --ok:var(--avo-emerald); --ok-ink:var(--avo-forest);
+
+    /* --- typography: Neue Haas Unica, Avo's own fallback ladder -------- */
+    --font:'Neue Haas Unica','Neue Haas Unica Pro','Neue Haas Grotesk Display Pro',
+           'Neue Haas Grotesk Text Pro','Helvetica Neue',Arial,Helvetica,sans-serif;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:500 14px/1.3 var(--font);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1400px;margin:0 auto;padding:16px 18px 60px}
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line);
+    padding-bottom:12px;margin-bottom:16px;position:sticky;top:0;background:var(--bg);z-index:5}
+  /* logo lockup: Avo wordmark (A + Avodings) then the product name */
+  .logo{display:inline-flex;align-items:center;gap:9px;color:var(--text)}
+  .logo .mark{height:19px;width:auto;display:block}
+  .logo .logotext{font-weight:900;letter-spacing:.14em;font-size:10.5px;text-transform:uppercase;
+    padding-left:9px;border-left:1px solid var(--line)}
+  .grow{flex:1}
+  /* Mini recipe: body x 0.75, line-height 1.4 */
+  .pill{border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:10.5px;
+    line-height:1.4;letter-spacing:.08em;text-transform:uppercase;font-weight:900;color:var(--muted)}
+  .pill.live{border-color:var(--accent-ink);background:var(--accent);color:var(--text)}
+  .pill.warn{border-color:var(--accent-ink);background:var(--danger);color:var(--text)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;align-items:start}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .card h2{margin:0 0 10px;font-size:10.5px;line-height:1.4;letter-spacing:.14em;
+    text-transform:uppercase;font-weight:900;color:var(--muted)}
+  .card.wide{grid-column:1/-1}
+  /* hot pink fill, black ink — the Avo primary combination */
+  button{background:var(--accent);color:var(--text);border:1px solid var(--accent-ink);
+    border-radius:8px;padding:8px 13px;font-family:inherit;font-weight:900;font-size:13px;cursor:pointer}
+  button:hover{filter:brightness(.97)}
+  button:disabled{opacity:.4;cursor:not-allowed;filter:none}
+  button.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+  button.ghost:hover{border-color:var(--text);filter:none}
+  button.hot{background:var(--hot);color:var(--text);border-color:var(--accent-ink)}
+  button.bad{background:var(--danger);color:var(--text);border-color:var(--accent-ink)}
+  button.sm{padding:5px 9px;font-size:12px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input,select,textarea{background:var(--panel2);color:var(--text);border:1px solid var(--line);
+    border-radius:8px;padding:7px 9px;font-size:13px;font-family:inherit;font-weight:500}
+  textarea{width:100%;font-family:var(--mono);font-size:12px;resize:vertical}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent-ink);
+    box-shadow:0 0 0 3px var(--accent)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{font-size:10.5px;line-height:1.4;letter-spacing:.08em;text-transform:uppercase;
+    font-weight:900;color:var(--muted)}
+  .muted{color:var(--muted)} .ok{color:var(--ok-ink);font-weight:900}
+  .err{color:var(--danger-ink);font-weight:900}
+  /* warnings get the hot-pink/orange "spice" highlight rather than a low-contrast text colour */
+  .hot{background:var(--hot-soft);color:var(--text);font-weight:900;
+    border-radius:4px;padding:0 5px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+  .mono{font-family:var(--mono);font-size:12px}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--danger);margin-right:6px}
+  .dot.on{background:var(--ok)}
+  .hidden{display:none !important}
+  .scroll{max-height:340px;overflow:auto}
+  .kv{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed var(--line)}
+  .kv b{font-variant-numeric:tabular-nums}
+  .phasebar{display:flex;gap:6px;flex-wrap:wrap}
+  .phasebar button{background:var(--panel2);color:var(--muted);border:1px solid var(--line);font-weight:500}
+  .phasebar button.cur{background:var(--accent);color:var(--text);border-color:var(--accent-ink)}
+  .bar{height:7px;background:var(--avo-black-20);border-radius:99px;overflow:hidden;margin-top:8px}
+  .bar>i{display:block;height:100%;background:var(--ok);width:0;transition:width .4s}
+  #toast{position:fixed;right:16px;bottom:16px;background:var(--panel);border:1px solid var(--text);
+    border-radius:10px;padding:10px 14px;max-width:420px;display:none;z-index:20;
+    box-shadow:0 6px 24px rgba(0,0,0,.14)}
+  dialog{background:var(--panel);color:var(--text);border:1px solid var(--text);border-radius:12px;
+    padding:16px;max-width:820px;width:92vw}
+  dialog::backdrop{background:rgba(0,0,0,.55)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <span class="logo">
+    <svg class="mark" viewBox="235 235 955 380" xmlns="http://www.w3.org/2000/svg"
+         fill="currentColor" role="img" aria-label="Avo"><title>Avo</title><path d="m312.4,600h-61.94l127.32-350.02h79.15l127.32,350.02h-61.94l-32.45-94.88h-145.02l-32.45,94.88Zm150.43-173.53c-19.66-58.33-34.74-104.71-45.23-139.12h-.98c-17.38,56.7-32.28,103.07-44.74,139.12l-9.34,27.53h109.63l-9.34-27.53Z"/><path d="m608.83,509.05l35.4-201.06c1.64-9.83,9.34-17.7,23.1-23.6,13.76-5.9,31.13-8.85,52.11-8.85,12.12,0,26.05,1.31,41.79,3.93,19.99,3.61,37.93,8.93,53.83,15.98,15.89,7.05,27.94,15.08,36.13,24.09,8.19,9.02,11.47,17.94,9.83,26.79l-35.39,200.57-121.43,53.09-95.37-90.95Zm139.12,11.8c-.98-6.55-3.86-12.45-8.6-17.7-4.75-5.24-11.55-8.36-20.4-9.34-6.56-.65-12.62.82-18.19,4.42-5.58,3.61-9.02,8.03-10.32,13.27l-10.82-1.97v-.98c0-8.19-2.54-14.26-7.62-18.19-5.08-3.93-10.08-6.39-14.99-7.37-4.59-.98-9.18-.98-13.76,0-4.59.98-8.53,2.63-11.8,4.92l-2.46,14.75,55.55,52.6,53.58,9.34,70.79-30.48,2.46-14.75c-2.63-3.6-5.98-6.55-10.08-8.85-4.1-2.29-8.44-3.44-13.03-3.44-7.54,0-13.69,2.05-18.43,6.14-4.75,4.1-7.95,7.3-9.59,9.59l-12.29-1.97Zm-113.07-53.58c4.92-1.97,10.15-2.95,15.73-2.95s11.06,1.31,16.47,3.93c5.41,2.63,9.91,6.23,13.52,10.82l20.65-115.03c-18.03-7.21-32.45-15.73-43.26-25.56l-23.11,128.8Zm196.15-141.33c-7.87-6.06-18.36-11.71-31.46-16.96-13.11-5.24-27.04-9.17-41.79-11.8-11.48-2.29-23.6-3.44-36.38-3.44-16.06,0-29.83,1.8-41.29,5.41-11.48,3.61-17.21,8.04-17.21,13.27,0,4.59,3.93,9.92,11.8,15.98,7.87,6.07,18.35,11.72,31.46,16.96,13.1,5.25,26.87,9.18,41.29,11.8,12.45,1.97,24.41,2.95,35.89,2.95,17.04,0,31.22-1.72,42.52-5.16s16.96-7.78,16.96-13.03c0-4.59-3.93-9.91-11.8-15.98Zm-131.75,156.08c6.88-3.93,13.43-5.9,19.66-5.9s12.04,1.4,17.45,4.18c5.41,2.79,9.91,6.31,13.52,10.57l20.16-112.58c-8.53-.65-17.21-1.64-26.06-2.95-8.85-1.64-17.04-3.6-24.58-5.9l-20.16,112.58Zm68.09-161.74c5.73,3.28,8.6,6.56,8.6,9.83,0,2.63-1.72,4.84-5.16,6.64-3.44,1.81-7.79,2.7-13.03,2.7-6.88,0-13.36-1.72-19.42-5.16-6.07-3.44-9.09-7.13-9.09-11.06,0-2.29,1.8-4.18,5.41-5.65,3.6-1.47,7.87-2.21,12.78-2.21,7.54,0,14.17,1.64,19.91,4.92Zm70.54,49.65c-11.8,5.58-28.19,8.69-49.16,9.34l-20.16,115.04c6.88-3.93,13.27-5.9,19.17-5.9,10.82,0,19.99,3.44,27.53,10.32l22.61-128.8Z"/><path d="m962.29,588.2c-20.33-11.8-36.46-27.85-48.42-48.18-11.97-20.32-17.94-42.6-17.94-66.86s5.98-46.04,17.94-66.37c11.96-20.32,28.1-36.46,48.42-48.42,20.32-11.96,42.44-17.94,66.37-17.94s46.53,5.98,66.86,17.94c20.32,11.97,36.38,28.11,48.18,48.42,11.8,20.32,17.7,42.45,17.7,66.37,0,28.51-8.85,54.74-26.55,78.66,14.09,20.98,31.78,36.87,53.09,47.69-10.49,4.25-22.78,6.39-36.87,6.39-20.98,0-41.62-4.92-61.94-14.75-19.01,9.83-39.17,14.75-60.47,14.75-23.93,0-46.05-5.9-66.37-17.7Zm126.34-18.19c17.04,9.83,34.08,15.41,51.13,16.71-12.13-12.12-21.31-24.25-27.53-36.38,20.32-22.61,30.48-48.34,30.48-77.18,0-20.65-5.08-39.73-15.24-57.27-10.16-17.53-24.01-31.38-41.54-41.54-17.54-10.15-36.62-15.24-57.27-15.24s-39.74,5.08-57.27,15.24c-17.54,10.16-31.39,24.01-41.54,41.54-10.16,17.54-15.24,36.62-15.24,57.27s5.08,39.74,15.24,57.27c10.16,17.54,24,31.39,41.54,41.54,17.53,10.16,36.62,15.24,57.27,15.24s40.96-5.73,59.98-17.21Zm-120.44-87.75c-2.63-2.46-3.93-5.48-3.93-9.09s1.31-6.71,3.93-9.34c2.62-2.62,5.73-3.93,9.34-3.93,3.27,0,6.15,1.31,8.6,3.93,2.46,2.63,3.69,5.74,3.69,9.34s-1.23,6.64-3.69,9.09-5.33,3.69-8.6,3.69c-3.61,0-6.72-1.23-9.34-3.69Zm51.13-.25c-2.63-2.62-3.93-5.57-3.93-8.85,0-3.6,1.39-6.71,4.18-9.34,2.78-2.62,5.81-3.93,9.09-3.93s6.22,1.31,8.85,3.93c2.62,2.63,3.93,5.74,3.93,9.34,0,3.28-1.23,6.23-3.69,8.85-2.46,2.63-5.49,3.93-9.09,3.93s-6.72-1.31-9.34-3.93Zm51.86.25c-2.46-2.46-3.69-5.48-3.69-9.09s1.23-6.71,3.69-9.34c2.46-2.62,5.32-3.93,8.6-3.93,3.6,0,6.71,1.31,9.34,3.93,2.62,2.63,3.93,5.74,3.93,9.34,0,3.28-1.31,6.23-3.93,8.85s-5.74,3.93-9.34,3.93c-3.28,0-6.15-1.23-8.6-3.69Z"/></svg>
+    <span class="logotext">AI Lab · Cockpit</span>
+  </span>
+  <span class="pill live" id="phasePill">—</span>
+  <span class="pill" id="joinPill">join: —</span>
+  <span class="grow"></span>
+  <span class="pill" id="llmPill">llm: —</span>
+  <span class="pill" id="projPill">projector: 0</span>
+  <button class="ghost sm" onclick="window.open('/projector','_blank')">Open projector</button>
+</header>
+
+<!-- LOGIN -->
+<section id="login" class="card" style="max-width:420px">
+  <h2>Facilitator access</h2>
+  <div class="row">
+    <input id="adminCode" type="password" placeholder="Admin code" style="flex:1">
+    <button id="loginBtn">Unlock</button>
+  </div>
+  <div class="err" id="loginErr" style="margin-top:8px"></div>
+</section>
+
+<main id="panel" class="hidden">
+<div class="grid">
+
+  <!-- PHASE -->
+  <div class="card wide">
+    <h2>Phase</h2>
+    <div class="phasebar" id="phaseBar"></div>
+    <div class="row" style="margin-top:10px">
+      <span class="muted">Normal flow: PRESENTATION → LOBBY → GATEKEEPER → NEGOTIATION_BUILD → GROUP_STAGE → PATCH_WINDOW → PLAYOFFS → DONE. Jumping backwards is allowed for recovery.</span>
+    </div>
+  </div>
+
+  <!-- PRESENTATION -->
+  <div class="card wide" id="presCard">
+    <h2>Presentation</h2>
+    <div class="row">
+      <button class="ghost" id="slidePrev">◀ Prev</button>
+      <button id="slideNext">Next ▶</button>
+      <span class="mono" id="slidePos">—</span>
+      <span class="grow"></span>
+      <span class="muted small">Advance with ← / → arrow keys on the projector window.</span>
+    </div>
+    <div style="margin-top:8px" class="muted" id="slideNow"></div>
+  </div>
+
+  <!-- SAFETY -->
+  <div class="card">
+    <h2>Safety &amp; usage</h2>
+    <div class="row">
+      <button class="bad" id="pauseBtn">⏸ Pause all LLM calls</button>
+      <button class="ghost" id="resumeBtn">▶ Resume</button>
+    </div>
+    <div style="margin-top:10px" id="llmStats"></div>
+    <div style="margin-top:10px">
+      <div class="muted" style="font-size:11.5px;letter-spacing:.08em;text-transform:uppercase">Recent errors</div>
+      <div class="scroll mono" id="llmErrors" style="max-height:120px"></div>
+    </div>
+  </div>
+
+  <!-- SNAPSHOT -->
+  <div class="card">
+    <h2>Crash recovery</h2>
+    <div id="snapInfo" class="muted"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="ghost" id="saveSnap">Save snapshot now</button>
+      <button class="hot" id="loadSnap">Resume from snapshot</button>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <input id="resetConfirm" placeholder="type RESET" style="width:120px">
+      <button class="bad sm" id="resetBtn">Wipe event</button>
+      <label class="muted"><input type="checkbox" id="keepTeams" checked> keep teams</label>
+    </div>
+  </div>
+
+  <!-- GATEKEEPER -->
+  <div class="card">
+    <h2>Gatekeeper</h2>
+    <div class="row">
+      <label class="muted">round</label>
+      <input id="gkMins" type="number" value="15" style="width:60px">
+      <button id="gkStart">▶ Start / restart</button>
+      <button class="ghost sm" id="gkPlus">+1 min</button>
+      <button class="bad sm" id="gkStop">Stop</button>
+      <span class="mono" id="gkClock">—</span>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <span class="muted">Teams advance themselves on a breach. Starting tier for new teams:</span>
+      <select id="tierSel"></select>
+      <button class="sm" id="tierSet">Set</button>
+      <button class="ghost sm" id="gkReset">Reset game</button>
+    </div>
+    <div style="margin-top:10px" id="gkInfo"></div>
+    <div class="row" style="margin-top:8px">
+      <button class="ghost sm" id="gkAttempts">View attempts</button>
+      <span class="muted">secrets: <span class="mono" id="gkSecret">—</span></span>
+    </div>
+  </div>
+
+  <!-- GROUP STAGE -->
+  <div class="card">
+    <h2>Group stage</h2>
+    <div class="row">
+      <button id="runGroup">▶ Run round-robin</button>
+      <button class="hot sm" id="rerunGroup" title="Replays only duels that hit a model error, so nobody keeps points lost to a rate limit">↻ Repair failed duels</button>
+      <button class="bad sm" id="cancelGroup">Cancel</button>
+    </div>
+    <div class="bar"><i id="groupBar"></i></div>
+    <div style="margin-top:8px" id="groupInfo" class="muted"></div>
+    <div class="row" style="margin-top:10px">
+      <label class="muted">deal bonus</label>
+      <input id="dealBonus" type="number" style="width:70px">
+      <label class="muted">concurrency</label>
+      <input id="conc" type="number" style="width:70px">
+      <button class="ghost sm" id="saveTuning">Apply</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label class="muted"><input type="checkbox" id="injection"> allow prompt injection between negotiators</label>
+    </div>
+  </div>
+
+  <!-- SUBMISSION WINDOW -->
+  <div class="card">
+    <h2>Submission window</h2>
+    <div class="row">
+      <label class="muted">minutes</label>
+      <input id="patchMin" type="number" value="15" style="width:70px">
+      <button class="hot" id="openPatch">Set / restart</button>
+      <button class="ghost sm" id="plusPatch">+1 min</button>
+      <button class="ghost sm" id="closePatch">Close now</button>
+    </div>
+    <div style="margin-top:8px" id="patchInfo" class="muted"></div>
+    <div class="muted small" style="margin-top:6px">
+      One clock, used by whichever writing phase is open. It starts automatically on
+      entering NEGOTIATION BUILD (15 min) and PATCH WINDOW (5 min). When it expires,
+      prompt submissions and test duels are refused.
+    </div>
+  </div>
+
+  <!-- PLAYOFFS -->
+  <div class="card">
+    <h2>Playoffs</h2>
+    <div class="row">
+      <button id="buildBracket">Seed from leaderboard</button>
+      <label class="muted">msg delay s</label>
+      <input id="delay" type="number" step="0.5" style="width:70px">
+      <button class="ghost sm" id="saveDelay">Apply</button>
+    </div>
+    <div style="margin-top:6px" class="muted">Manual seeding: comma-separated team ids, top seed first.</div>
+    <div class="row" style="margin-top:6px">
+      <input id="seedOverride" placeholder="t3,t7,t1,t12" style="flex:1">
+      <button class="ghost sm" id="buildManual">Seed manually</button>
+    </div>
+    <div style="margin-top:10px" id="bracketBox"></div>
+  </div>
+
+  <!-- ROSTER -->
+  <div class="card wide">
+    <h2>Teams <span id="rosterCount" class="muted"></span></h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>ID</th><th>Name</th><th>Connected</th><th>Reqs</th><th>Group</th><th>Playoff</th><th>Pts</th><th>Deals</th><th></th></tr></thead>
+        <tbody id="rosterBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- DUELS -->
+  <div class="card wide">
+    <h2>Duel transcripts</h2>
+    <div class="row">
+      <select id="duelStage"><option value="group">group</option><option value="playoff">playoff</option></select>
+      <button class="ghost sm" id="loadDuels">Load</button>
+    </div>
+    <div class="scroll" style="margin-top:8px">
+      <table><thead><tr><th>Match</th><th>Result</th><th></th></tr></thead><tbody id="duelBody"></tbody></table>
+    </div>
+  </div>
+
+</div>
+</main>
+</div>
+
+<div id="toast"></div>
+<dialog id="modal"><div id="modalBody"></div>
+  <div class="row" style="margin-top:12px;justify-content:flex-end">
+    <button class="ghost" onclick="document.getElementById('modal').close()">Close</button></div>
+</dialog>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let CODE = localStorage.getItem('avo_admin_code') || '';
+let S = null;
+let GK_ENDS_AT = 0;
+
+function tickGkClock() {
+  const el = document.getElementById('gkClock');
+  if (!el) return;
+  if (!GK_ENDS_AT) { el.textContent = 'not started'; el.className = 'mono muted'; return; }
+  const left = Math.max(0, GK_ENDS_AT * 1000 - Date.now());
+  const t = Math.round(left / 1000);
+  el.textContent = left
+    ? Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0') + ' left'
+    : 'TIME UP — attacks refused';
+  el.className = 'mono ' + (left ? (left < 120000 ? 'err' : 'ok') : 'err');
+}
+setInterval(tickGkClock, 1000);
+
+let SUB_ENDS_AT = 0;
+
+function tickSubClock() {
+  const el = document.getElementById('patchInfo');
+  if (!el) return;
+  if (!SUB_ENDS_AT) { el.textContent = 'No window set.'; el.className = 'muted'; return; }
+  const left = Math.max(0, SUB_ENDS_AT * 1000 - Date.now());
+  const t = Math.round(left / 1000);
+  el.textContent = left
+    ? 'Closes in ' + Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0')
+    : 'CLOSED — submissions and test duels refused';
+  el.className = left ? (left < 120000 ? 'err' : 'ok') : 'err';
+}
+setInterval(tickSubClock, 1000);
+
+function bumpTier(teamId, index) {
+  act(() => api('/api/admin/gatekeeper/team_tier', {method:'POST',
+    body: JSON.stringify({team_id: teamId, index})}));
+}
+
+async function api(path, opts={}) {
+  const headers = Object.assign({'Content-Type':'application/json','X-Admin-Code':CODE}, opts.headers||{});
+  const res = await fetch(path, Object.assign({}, opts, {headers}));
+  const text = await res.text();
+  let data = {}; try { data = text ? JSON.parse(text) : {}; } catch(e){ data = {detail:text}; }
+  if (!res.ok) throw new Error(data.detail || ('HTTP ' + res.status));
+  return data;
+}
+function toast(msg, bad) {
+  const t = $('#toast');
+  t.innerHTML = '<span class="' + (bad ? 'err' : 'ok') + '">' + esc(msg) + '</span>';
+  t.style.display = 'block';
+  clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', 4000);
+}
+async function act(fn) { try { await fn(); await refresh(); } catch (e) { toast(e.message, true); } }
+
+// --- login -------------------------------------------------------------
+$('#loginBtn').onclick = async () => {
+  CODE = $('#adminCode').value.trim();
+  try {
+    await api('/api/admin/auth', {method:'POST', body: JSON.stringify({code: CODE})});
+    localStorage.setItem('avo_admin_code', CODE);
+    $('#login').classList.add('hidden'); $('#panel').classList.remove('hidden');
+    refresh(); setInterval(refresh, 2000);
+  } catch (e) { $('#loginErr').textContent = e.message; }
+};
+$('#adminCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('#loginBtn').click(); });
+
+// --- controls ----------------------------------------------------------
+$('#slidePrev').onclick = () => act(() => api('/api/admin/slide', {method:'POST', body: JSON.stringify({action:'prev'})}));
+$('#slideNext').onclick = () => act(() => api('/api/admin/slide', {method:'POST', body: JSON.stringify({action:'next'})}));
+$('#pauseBtn').onclick  = () => act(() => api('/api/admin/llm/pause',  {method:'POST'}));
+$('#resumeBtn').onclick = () => act(() => api('/api/admin/llm/resume', {method:'POST'}));
+$('#saveSnap').onclick  = () => act(async () => { await api('/api/admin/snapshot/save', {method:'POST'}); toast('Snapshot saved'); });
+$('#loadSnap').onclick  = () => act(async () => {
+  if (!confirm('Replace live state with the snapshot on disk?')) return;
+  const r = await api('/api/admin/snapshot/load', {method:'POST'}); toast('Restored: ' + r.phase);
+});
+$('#resetBtn').onclick = () => act(async () => {
+  await api('/api/admin/reset_event', {method:'POST', body: JSON.stringify({
+    confirm: $('#resetConfirm').value.trim().toUpperCase(), keep_teams: $('#keepTeams').checked})});
+  $('#resetConfirm').value = ''; toast('Event reset');
+});
+$('#tierSet').onclick  = () => act(() => api('/api/admin/gatekeeper/tier', {method:'POST', body: JSON.stringify({index: Number($('#tierSel').value)})}));
+$('#gkStart').onclick = () => act(() => api('/api/admin/gatekeeper/round', {method:'POST',
+  body: JSON.stringify({action:'start', minutes: Number($('#gkMins').value)})}));
+$('#gkPlus').onclick  = () => act(() => api('/api/admin/gatekeeper/round', {method:'POST',
+  body: JSON.stringify({action:'extend', minutes: 1})}));
+$('#gkStop').onclick  = () => act(() => api('/api/admin/gatekeeper/round', {method:'POST',
+  body: JSON.stringify({action:'stop'})}));
+$('#gkReset').onclick  = () => act(async () => { if (confirm('Clear all gatekeeper attempts and breaches?')) await api('/api/admin/gatekeeper/reset', {method:'POST'}); });
+$('#gkAttempts').onclick = () => act(async () => {
+  const d = await api('/api/admin/gatekeeper/attempts?limit=80');
+  $('#modalBody').innerHTML = '<h2>Attacks (newest first)</h2>' + (d.attempts || []).map(a =>
+    '<div class="card" style="margin-bottom:8px"><b>' + esc(a.team_name) + '</b> · tier ' + (a.tier_index+1)
+    + (a.breached ? ' <span class="ok">BREACHED</span>' : (a.near_miss ? ' <span class="hot">near miss</span>' : ''))
+    + '<div class="mono" style="margin-top:6px;white-space:pre-wrap">' + esc(a.attack) + '</div>'
+    + '<div class="muted mono" style="margin-top:6px;white-space:pre-wrap">→ ' + esc(a.reply) + '</div></div>').join('');
+  $('#modal').showModal();
+});
+$('#runGroup').onclick    = () => act(async () => { await api('/api/admin/group_stage/run', {method:'POST', body: JSON.stringify({reset:true})}); toast('Group stage started'); });
+$('#rerunGroup').onclick  = () => act(() => api('/api/admin/group_stage/run', {method:'POST', body: JSON.stringify({reset:false})}));
+$('#cancelGroup').onclick = () => act(() => api('/api/admin/group_stage/cancel', {method:'POST'}));
+$('#saveTuning').onclick  = () => act(async () => {
+  await api('/api/admin/config', {method:'POST', body: JSON.stringify({path:'negotiation.deal_bonus', value: Number($('#dealBonus').value)})});
+  await api('/api/admin/config', {method:'POST', body: JSON.stringify({path:'llm.max_concurrency', value: Number($('#conc').value)})});
+  await api('/api/admin/config', {method:'POST', body: JSON.stringify({path:'llm.max_concurrent_duels', value: Number($('#conc').value)})});
+  toast('Applied');
+});
+$('#injection').onchange = () => act(() => api('/api/admin/config', {method:'POST',
+  body: JSON.stringify({path:'negotiation.allow_prompt_injection', value: $('#injection').checked})}));
+$('#saveDelay').onclick = () => act(async () => {
+  await api('/api/admin/config', {method:'POST', body: JSON.stringify({path:'negotiation.inter_message_delay_s', value: Number($('#delay').value)})});
+  toast('Delay updated');
+});
+$('#openPatch').onclick  = () => act(() => api('/api/admin/window', {method:'POST',
+  body: JSON.stringify({action:'set', minutes: Number($('#patchMin').value)})}));
+$('#plusPatch').onclick  = () => act(() => api('/api/admin/window', {method:'POST',
+  body: JSON.stringify({action:'extend', minutes: 1})}));
+$('#closePatch').onclick = () => act(() => api('/api/admin/window', {method:'POST',
+  body: JSON.stringify({action:'close'})}));
+$('#buildBracket').onclick = () => act(() => api('/api/admin/bracket/build', {method:'POST', body: JSON.stringify({})}));
+$('#buildManual').onclick  = () => act(() => api('/api/admin/bracket/build', {method:'POST',
+  body: JSON.stringify({seeds: $('#seedOverride').value.split(',').map(s => s.trim()).filter(Boolean)})}));
+$('#loadDuels').onclick = () => act(async () => {
+  const d = await api('/api/admin/duels?stage=' + $('#duelStage').value + '&limit=60');
+  $('#duelBody').innerHTML = d.duels.map(x =>
+    '<tr><td>' + esc(x.label) + '</td><td>' + (x.closed_deal ? (x.split ? x.split.join(' / ') : 'deal')
+      : '<span class="err">no deal</span>') + (x.errors && x.errors.length ? ' <span class="hot">⚠</span>' : '')
+    + '</td><td><button class="ghost sm" onclick="showDuel(\'' + esc(x.id) + '\')">transcript</button></td></tr>').join('')
+    || '<tr><td colspan="3" class="muted">Nothing yet.</td></tr>';
+});
+
+async function showDuel(id) {
+  try {
+    const d = await api('/api/admin/duel?duel_id=' + encodeURIComponent(id));
+    $('#modalBody').innerHTML = '<h2>' + esc(d.name_a) + ' vs ' + esc(d.name_b) + '</h2>'
+      + '<div class="muted">' + (d.closed_deal ? 'Deal ' + d.split.join(' / ') : 'No deal — both scored 0') + '</div>'
+      + d.transcript.map(m => '<div class="card" style="margin-top:8px"><b>' + esc(m.speaker_name) + '</b>'
+        + (m.action ? ' <span class="mono ok">' + esc(JSON.stringify(m.action)) + '</span>' : '')
+        + (m.truncated ? ' <span class="hot">truncated</span>' : '')
+        + (m.invalid && m.invalid.length ? ' <span class="err">' + esc(m.invalid.join('; ')) + '</span>' : '')
+        + (m.error ? ' <span class="err">model error</span>' : '')
+        + (m.filtered ? ' <span class="hot">blocked by Azure content filter</span>' : '')
+        + '<div style="margin-top:6px;white-space:pre-wrap">' + esc(m.text) + '</div></div>').join('');
+    $('#modal').showModal();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function renameTeam(id, current) {
+  const name = prompt('New team name', current); if (name === null) return;
+  act(() => api('/api/admin/team/update', {method:'POST', body: JSON.stringify({team_id:id, name})}));
+}
+async function toggleTeam(id, active) {
+  act(() => api('/api/admin/team/update', {method:'POST', body: JSON.stringify({team_id:id, active:!active})}));
+}
+async function removeTeam(id) {
+  if (!confirm('Remove this team entirely?')) return;
+  act(() => api('/api/admin/team/update', {method:'POST', body: JSON.stringify({team_id:id, remove:true})}));
+}
+async function editPrompt(id, version) {
+  try {
+    const d = await api('/api/admin/team/prompt?team_id=' + id + '&version=' + version);
+    $('#modalBody').innerHTML = '<h2>' + esc(id) + ' · ' + esc(version) + ' prompt'
+      + (d.submitted ? '' : ' <span class="hot">(not submitted — showing fallback)</span>') + '</h2>'
+      + '<textarea id="pEdit" rows="18">' + esc(d.prompt) + '</textarea>'
+      + '<div class="row" style="margin-top:8px"><button onclick="savePrompt(\'' + esc(id) + '\',\'' + esc(version) + '\')">Save for team</button></div>';
+    $('#modal').showModal();
+  } catch (e) { toast(e.message, true); }
+}
+async function savePrompt(id, version) {
+  await act(() => api('/api/admin/team/update', {method:'POST',
+    body: JSON.stringify({team_id:id, version, prompt: $('#pEdit').value})}));
+  $('#modal').close(); toast('Prompt saved');
+}
+async function runMatch(mid) {
+  act(async () => { await api('/api/admin/match/run', {method:'POST', body: JSON.stringify({match_id: mid})}); toast('Running ' + mid); });
+}
+
+// --- render ------------------------------------------------------------
+function render(s) {
+  S = s;
+  $('#phasePill').textContent = s.phase.replace(/_/g,' ');
+  $('#joinPill').textContent = 'join: ' + s.join_code;
+  $('#projPill').textContent = 'projector: ' + s.projector_clients;
+  const l = s.llm;
+  $('#llmPill').textContent = 'llm: ' + l.mode + (l.paused ? ' PAUSED' : '') + ' · ' + l.in_flight + ' in flight';
+  $('#llmPill').className = 'pill ' + (l.paused ? 'warn' : (l.in_flight ? 'live' : ''));
+
+  $('#phaseBar').innerHTML = s.phases.map(p =>
+    '<button class="' + (p === s.phase ? 'cur' : '') + '" onclick="setPhase(\'' + p + '\')">' + p.replace(/_/g,' ') + '</button>').join('');
+
+  // Presentation card: highlighted during the phase, usable any time to pre-set.
+  $('#presCard').style.opacity = s.phase === 'PRESENTATION' ? '1' : '.6';
+  $('#slidePos').textContent = (s.slide_count ? (s.slide_index + 1) + ' / ' + s.slide_count : 'no slides');
+  const title = (s.slide_titles || [])[s.slide_index] || '';
+  $('#slideNow').textContent = title ? 'On screen: ' + title : '';
+  $('#slidePrev').disabled = s.slide_index <= 0;
+  $('#slideNext').disabled = s.slide_count ? s.slide_index >= s.slide_count - 1 : true;
+
+  $('#llmStats').innerHTML = [
+    ['calls', l.calls], ['ok', l.ok], ['failed', l.failed], ['timeouts', l.timeouts],
+    ['retries', l.retries], ['in flight', l.in_flight], ['concurrency cap', l.max_concurrency],
+    ['empty replies', l.empty_replies], ['content filtered', l.filtered ?? 0],
+    ['latency (median)', l.latency.median + 's'],
+    ['tokens (real or est.)', l.total_tokens.toLocaleString()],
+  ].map(([k,v]) => '<div class="kv"><span class="muted">' + k + '</span><b>' + v + '</b></div>').join('');
+  $('#llmErrors').innerHTML = (l.recent_errors || []).slice().reverse().map(e =>
+    '<div class="err">' + esc(e.label) + ': ' + esc(e.message) + '</div>').join('') || '<span class="muted">none</span>';
+
+  const snap = s.snapshot;
+  $('#snapInfo').innerHTML = snap
+    ? 'On disk: <b>' + esc(snap.phase) + '</b>, ' + snap.teams + ' teams, ' + snap.results
+      + ' duels — saved ' + new Date(snap.saved_at * 1000).toLocaleTimeString()
+    : 'No snapshot on disk yet.';
+
+  const g = s.gatekeeper;
+  if ($('#tierSel').options.length !== g.tier_count) {
+    $('#tierSel').innerHTML = g.tier_names.map((n,i) => '<option value="' + i + '">' + esc(n) + '</option>').join('');
+  }
+  $('#tierSel').value = g.tier_index;
+  // Current tier's word first, then the rest — the facilitator needs to know
+  // which word to expect a breach on right now.
+  $('#gkSecret').innerHTML = (s.config.gatekeeper_tier_secrets || []).map((t, i) =>
+    '<span style="' + (i === g.tier_index ? 'font-weight:900' : 'opacity:.45') + '">'
+    + esc(t.secret) + '</span>').join(' · ') || esc(s.config.gatekeeper_secret);
+  GK_ENDS_AT = g.ends_at || 0;
+  tickGkClock();
+  const cleared = (g.standings || []).filter(t => t.finished).length;
+  $('#gkInfo').innerHTML = '<div class="kv"><span class="muted">attacks total</span><b>'
+    + g.attempts_total + '</b></div>'
+    + '<div class="kv"><span class="muted">vaults breached</span><b>'
+    + (g.standings || []).reduce((n, t) => n + t.breached, 0) + ' / '
+    + (g.standings || []).length * g.tier_count + '</b></div>'
+    + '<div class="kv"><span class="muted">teams that cleared everything</span><b class="'
+    + (cleared ? 'ok' : 'muted') + '">' + cleared + '</b></div>'
+    + '<div style="margin-top:6px">' + (g.standings || []).slice(0, 16).map(t =>
+        '<div class="row" style="gap:6px"><span style="width:16px" class="muted">'
+        + (t.breached ? t.rank : '·') + '</span><b>' + esc(t.name) + '</b>'
+        + '<span class="muted">' + t.breached + '/' + g.tier_count + ' · '
+        + (t.finished ? 'all clear' : 'on vault ' + (t.tier_index + 1)) + ' · ' + t.points + 'pts</span>'
+        + '<span class="grow"></span>'
+        + '<button class="ghost sm" onclick="bumpTier(\'' + esc(t.team_id) + '\',' + (t.tier_index - 1) + ')">−</button>'
+        + '<button class="ghost sm" onclick="bumpTier(\'' + esc(t.team_id) + '\',' + (t.tier_index + 1) + ')">+</button>'
+        + '</div>').join('') + '</div>';
+
+  const p = s.progress;
+  $('#groupBar').style.width = p.total ? (100 * p.completed / p.total) + '%' : '0';
+  $('#groupInfo').innerHTML = p.total
+    ? p.completed + ' / ' + p.total + ' duels' + (p.running ? ' — <b class="ok">running</b>' : '')
+      + (p.ended_at && !p.running ? ' — done in ' + Math.round(p.ended_at - p.started_at) + 's' : '')
+      + (p.error ? ' — <span class="err">' + esc(p.error) + '</span>' : '')
+      + (p.duels_with_errors ? '<div class="hot" style="margin-top:4px">⚠ ' + p.duels_with_errors
+          + ' duel(s) lost a turn to a model error — hit <b>Repair failed duels</b> before seeding the bracket.</div>' : '')
+    : 'Not run yet.';
+  if (document.activeElement !== $('#dealBonus')) $('#dealBonus').value = s.config.negotiation.deal_bonus;
+  if (document.activeElement !== $('#conc')) $('#conc').value = s.config.llm.max_concurrency;
+  if (document.activeElement !== $('#delay')) $('#delay').value = s.config.negotiation.inter_message_delay_s;
+  $('#injection').checked = !!s.config.negotiation.allow_prompt_injection;
+
+  SUB_ENDS_AT = s.submission_ends_at || 0;
+  tickSubClock();
+
+  const b = s.bracket;
+  $('#bracketBox').innerHTML = (b.matches || []).map(m => {
+    const ready = m.team_a && m.team_b;
+    return '<div class="card" style="padding:8px;margin-bottom:6px"><div class="row">'
+      + '<b>' + esc(m.label) + '</b><span class="muted">bo' + m.best_of + '</span>'
+      + '<span class="grow"></span>'
+      + '<span>' + esc(m.name_a || 'TBD') + ' vs ' + esc(m.name_b || 'TBD') + '</span>'
+      + (m.winner ? ' <span class="ok">→ ' + esc(m.winner_name) + (m.note ? ' (' + esc(m.note) + ')' : '') + '</span>' : '')
+      + '<button class="sm ' + (ready ? '' : 'ghost') + '" ' + (ready ? '' : 'disabled')
+      + ' onclick="runMatch(\'' + esc(m.id) + '\')">▶ Run</button></div></div>';
+  }).join('') || '<span class="muted">No bracket yet — seed it after the group stage.</span>';
+
+  const board = {}; s.leaderboard.forEach(e => board[e.team_id] = e);
+  $('#rosterCount').textContent = '(' + s.roster.count + ')';
+  $('#rosterBody').innerHTML = s.roster.teams.map(t => {
+    const e = board[t.team_id] || {points:0, deals_closed:0};
+    return '<tr' + (t.active ? '' : ' style="opacity:.45"') + '>'
+      + '<td class="mono">' + esc(t.team_id) + '</td>'
+      + '<td>' + esc(t.name) + '</td>'
+      + '<td><span class="dot ' + (t.connected ? 'on' : '') + '"></span>' + (t.connected ? 'yes' : '<span class="err">no</span>') + '</td>'
+      + '<td>' + t.requests + '</td>'
+      + '<td>' + (t.submitted ? '<span class="ok">✓</span>' : '<span class="err">—</span>')
+        + ' <button class="ghost sm" onclick="editPrompt(\'' + esc(t.team_id) + '\',\'group\')">view</button></td>'
+      + '<td>' + (t.submitted_playoff ? '<span class="ok">✓</span>' : '<span class="muted">—</span>')
+        + ' <button class="ghost sm" onclick="editPrompt(\'' + esc(t.team_id) + '\',\'playoff\')">view</button></td>'
+      + '<td>' + e.points + '</td><td>' + e.deals_closed + '</td>'
+      + '<td class="row">'
+      + '<button class="ghost sm" onclick="renameTeam(\'' + esc(t.team_id) + '\',\'' + esc(t.name).replace(/'/g,"\\'") + '\')">rename</button>'
+      + '<button class="ghost sm" onclick="toggleTeam(\'' + esc(t.team_id) + '\',' + t.active + ')">' + (t.active ? 'bench' : 'activate') + '</button>'
+      + '<button class="ghost sm" onclick="removeTeam(\'' + esc(t.team_id) + '\')">×</button>'
+      + '</td></tr>';
+  }).join('') || '<tr><td colspan="9" class="muted">No teams yet.</td></tr>';
+}
+
+function setPhase(p) {
+  const body = {phase: p};
+  // Both writing phases take their clock from the same input.
+  if (p === 'PATCH_WINDOW' || p === 'NEGOTIATION_BUILD') {
+    body.duration_s = Number($('#patchMin').value) * 60;
+  }
+  act(() => api('/api/admin/phase', {method:'POST', body: JSON.stringify(body)}));
+}
+
+async function refresh() {
+  try { render(await api('/api/admin/state')); }
+  catch (e) { $('#llmPill').textContent = 'offline'; }
+}
+
+if (CODE) { $('#adminCode').value = CODE; $('#loginBtn').click(); }
+</script>
+</body>
+</html>

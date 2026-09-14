@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avo AI Lab — Team Console</title>
+<style>
+  :root{
+    /* --- Avo brand palette ------------------------------------------- */
+    --avo-offwhite:#FAF8F5; --avo-black:#000000; --avo-pink:#FFC7ED;
+    --avo-black-70:#4A4A49; --avo-black-50:#7C7B7A; --avo-black-20:#C8C7C4;
+    --avo-burgund:#5A0B25; --avo-red:#FF5150; --avo-orange:#FF8B60; --avo-orange-lt:#FFD0BF;
+    --avo-marin:#011D46;   --avo-blue:#6080FF; --avo-sky:#ADBDFF;   --avo-sky-lt:#DEE5FF;
+    --avo-forest:#00452F;  --avo-emerald:#00D080; --avo-green:#6DFF83; --avo-green-lt:#C4FFCD;
+
+    /* --- semantic roles (light surface: off-white bg, black ink) ------ */
+    --bg:var(--avo-offwhite); --panel:#FFFFFF; --panel2:var(--avo-offwhite);
+    --line:var(--avo-black-20); --text:var(--avo-black); --muted:var(--avo-black-70);
+    --accent:var(--avo-pink); --accent-ink:var(--avo-burgund);
+    --hot:var(--avo-orange); --hot-soft:var(--avo-orange-lt);
+    --danger:var(--avo-red); --danger-ink:var(--avo-burgund);
+    --ok:var(--avo-emerald); --ok-ink:var(--avo-forest); --ok-soft:var(--avo-green-lt);
+    --info:var(--avo-blue); --info-ink:var(--avo-marin); --info-soft:var(--avo-sky-lt);
+
+    /* --- typography: Neue Haas Unica, Avo's own fallback ladder -------- */
+    --font:'Neue Haas Unica','Neue Haas Unica Pro','Neue Haas Grotesk Display Pro',
+           'Neue Haas Grotesk Text Pro','Helvetica Neue',Arial,Helvetica,sans-serif;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  /* body 15px, line-height 1.3 per the Avo type recipe; Medium (500) is the workhorse */
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:500 15px/1.3 var(--font);-webkit-font-smoothing:antialiased}
+  a{color:var(--accent-ink)}
+  .wrap{max-width:900px;margin:0 auto;padding:22px 18px 80px}
+  header.bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:22px}
+  /* logo lockup: Avo wordmark (A + Avodings) then the product name */
+  .logo{display:inline-flex;align-items:center;gap:9px;color:var(--text)}
+  .logo .mark{height:22px;width:auto;display:block}
+  .logo .logotext{font-weight:900;letter-spacing:.14em;font-size:11.5px;text-transform:uppercase;
+    padding-left:9px;border-left:1px solid var(--line)}
+  .grow{flex:1}
+  .pill{border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:11.5px;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--panel)}
+  .pill.live{border-color:var(--accent-ink);background:var(--accent);color:var(--text)}
+  /* H2 recipe: body x 2.5, line-height 1.1, tracking -10 */
+  h1{font-size:37.5px;line-height:1.1;letter-spacing:-.01em;font-weight:900;margin:0 0 8px}
+  /* H3 recipe: body size set in Heavy */
+  h2{font-size:15px;line-height:1.3;font-weight:900;margin:0 0 10px}
+  p.sub{color:var(--muted);margin:0 0 18px;max-width:62ch}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  /* Mini recipe: body x 0.75, line-height 1.4 */
+  label{display:block;font-size:11.5px;line-height:1.4;letter-spacing:.09em;text-transform:uppercase;
+    font-weight:900;color:var(--muted);margin-bottom:6px}
+  input,textarea{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);
+    border-radius:10px;padding:11px 12px;font-size:15px;font-family:inherit;font-weight:500}
+  textarea{resize:vertical;line-height:1.5}
+  textarea.code{font-family:var(--mono);font-size:13.5px}
+  input:focus,textarea:focus{outline:none;border-color:var(--accent-ink);
+    box-shadow:0 0 0 3px var(--accent)}
+  /* hot pink fill, black ink — the Avo primary combination */
+  button{background:var(--accent);color:var(--text);border:1px solid var(--accent-ink);
+    border-radius:10px;padding:11px 18px;font-family:inherit;
+    font-weight:900;font-size:14px;cursor:pointer;letter-spacing:.01em}
+  button:hover{filter:brightness(.97)}
+  button:disabled{opacity:.4;cursor:not-allowed;filter:none}
+  button.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+  button.ghost:hover{border-color:var(--text);filter:none}
+  button.hot{background:var(--hot);color:var(--text);border-color:var(--avo-burgund)}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .muted{color:var(--muted)}
+  .small{font-size:12.5px;line-height:1.4}
+  .count{font-variant-numeric:tabular-nums}
+  .err{color:var(--danger-ink);font-weight:900}
+  .ok{color:var(--ok-ink);font-weight:900}
+  .hidden{display:none !important}
+  .msg{border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin:8px 0;background:var(--panel2)}
+  .msg .who{font-size:11.5px;line-height:1.4;letter-spacing:.1em;text-transform:uppercase;
+    font-weight:900;color:var(--muted);margin-bottom:4px}
+  /* you = hot pink, the other side = Avo blue: unmistakable at a glance */
+  .msg.mine{border-left:4px solid var(--accent)}
+  .msg.theirs{border-left:4px solid var(--info)}
+  .tag{display:inline-block;font-family:var(--mono);font-size:11.5px;background:var(--accent);
+    border:1px solid var(--accent-ink);border-radius:6px;padding:2px 7px;color:var(--text);margin-top:6px}
+  pre.snippet{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px;
+    font-family:var(--mono);font-size:12.5px;overflow-x:auto;margin:8px 0 0}
+  /* rival prompts: one collapsible row per team, yours pinned in accent */
+  details.rival{border:1px solid var(--line);border-radius:10px;margin-top:8px;background:var(--panel2)}
+  details.rival summary{cursor:pointer;padding:9px 12px;font-weight:900;list-style:none;
+    display:flex;align-items:center;gap:9px}
+  details.rival summary::-webkit-details-marker{display:none}
+  details.rival summary::before{content:'▸';color:var(--muted);font-weight:500}
+  details.rival[open] summary::before{content:'▾'}
+  details.rival.mine{border-color:var(--accent-ink);background:var(--accent)}
+  details.rival .seed{font-variant-numeric:tabular-nums;color:var(--muted);min-width:2.4em}
+  details.rival.mine .seed{color:var(--text)}
+  details.rival .stat{margin-left:auto;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);font-weight:900}
+  details.rival.mine .stat{color:var(--text)}
+  details.rival pre.snippet{margin:0 12px 12px;white-space:pre-wrap;word-break:break-word;
+    max-height:340px;overflow-y:auto}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+  th{font-size:11.5px;line-height:1.4;letter-spacing:.09em;text-transform:uppercase;
+    font-weight:900;color:var(--muted)}
+  tr.me td{background:var(--accent);font-weight:900}
+  .banner{border-radius:12px;padding:12px 16px;margin-bottom:16px;font-weight:900}
+  /* every coloured fill carries black ink — Avo's universal-design rule */
+  .banner.hot{background:var(--hot-soft);border:1px solid var(--hot);color:var(--text)}
+  .banner.win{background:var(--ok-soft);border:1px solid var(--ok-ink);color:var(--text)}
+  .banner.bad{background:var(--info-soft);border:1px solid var(--danger);color:var(--text)}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line);
+    border-top-color:var(--accent-ink);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="bar">
+    <span class="logo">
+      <svg class="mark" viewBox="235 235 955 380" xmlns="http://www.w3.org/2000/svg"
+           fill="currentColor" role="img" aria-label="Avo"><title>Avo</title><path d="m312.4,600h-61.94l127.32-350.02h79.15l127.32,350.02h-61.94l-32.45-94.88h-145.02l-32.45,94.88Zm150.43-173.53c-19.66-58.33-34.74-104.71-45.23-139.12h-.98c-17.38,56.7-32.28,103.07-44.74,139.12l-9.34,27.53h109.63l-9.34-27.53Z"/><path d="m608.83,509.05l35.4-201.06c1.64-9.83,9.34-17.7,23.1-23.6,13.76-5.9,31.13-8.85,52.11-8.85,12.12,0,26.05,1.31,41.79,3.93,19.99,3.61,37.93,8.93,53.83,15.98,15.89,7.05,27.94,15.08,36.13,24.09,8.19,9.02,11.47,17.94,9.83,26.79l-35.39,200.57-121.43,53.09-95.37-90.95Zm139.12,11.8c-.98-6.55-3.86-12.45-8.6-17.7-4.75-5.24-11.55-8.36-20.4-9.34-6.56-.65-12.62.82-18.19,4.42-5.58,3.61-9.02,8.03-10.32,13.27l-10.82-1.97v-.98c0-8.19-2.54-14.26-7.62-18.19-5.08-3.93-10.08-6.39-14.99-7.37-4.59-.98-9.18-.98-13.76,0-4.59.98-8.53,2.63-11.8,4.92l-2.46,14.75,55.55,52.6,53.58,9.34,70.79-30.48,2.46-14.75c-2.63-3.6-5.98-6.55-10.08-8.85-4.1-2.29-8.44-3.44-13.03-3.44-7.54,0-13.69,2.05-18.43,6.14-4.75,4.1-7.95,7.3-9.59,9.59l-12.29-1.97Zm-113.07-53.58c4.92-1.97,10.15-2.95,15.73-2.95s11.06,1.31,16.47,3.93c5.41,2.63,9.91,6.23,13.52,10.82l20.65-115.03c-18.03-7.21-32.45-15.73-43.26-25.56l-23.11,128.8Zm196.15-141.33c-7.87-6.06-18.36-11.71-31.46-16.96-13.11-5.24-27.04-9.17-41.79-11.8-11.48-2.29-23.6-3.44-36.38-3.44-16.06,0-29.83,1.8-41.29,5.41-11.48,3.61-17.21,8.04-17.21,13.27,0,4.59,3.93,9.92,11.8,15.98,7.87,6.07,18.35,11.72,31.46,16.96,13.1,5.25,26.87,9.18,41.29,11.8,12.45,1.97,24.41,2.95,35.89,2.95,17.04,0,31.22-1.72,42.52-5.16s16.96-7.78,16.96-13.03c0-4.59-3.93-9.91-11.8-15.98Zm-131.75,156.08c6.88-3.93,13.43-5.9,19.66-5.9s12.04,1.4,17.45,4.18c5.41,2.79,9.91,6.31,13.52,10.57l20.16-112.58c-8.53-.65-17.21-1.64-26.06-2.95-8.85-1.64-17.04-3.6-24.58-5.9l-20.16,112.58Zm68.09-161.74c5.73,3.28,8.6,6.56,8.6,9.83,0,2.63-1.72,4.84-5.16,6.64-3.44,1.81-7.79,2.7-13.03,2.7-6.88,0-13.36-1.72-19.42-5.16-6.07-3.44-9.09-7.13-9.09-11.06,0-2.29,1.8-4.18,5.41-5.65,3.6-1.47,7.87-2.21,12.78-2.21,7.54,0,14.17,1.64,19.91,4.92Zm70.54,49.65c-11.8,5.58-28.19,8.69-49.16,9.34l-20.16,115.04c6.88-3.93,13.27-5.9,19.17-5.9,10.82,0,19.99,3.44,27.53,10.32l22.61-128.8Z"/><path d="m962.29,588.2c-20.33-11.8-36.46-27.85-48.42-48.18-11.97-20.32-17.94-42.6-17.94-66.86s5.98-46.04,17.94-66.37c11.96-20.32,28.1-36.46,48.42-48.42,20.32-11.96,42.44-17.94,66.37-17.94s46.53,5.98,66.86,17.94c20.32,11.97,36.38,28.11,48.18,48.42,11.8,20.32,17.7,42.45,17.7,66.37,0,28.51-8.85,54.74-26.55,78.66,14.09,20.98,31.78,36.87,53.09,47.69-10.49,4.25-22.78,6.39-36.87,6.39-20.98,0-41.62-4.92-61.94-14.75-19.01,9.83-39.17,14.75-60.47,14.75-23.93,0-46.05-5.9-66.37-17.7Zm126.34-18.19c17.04,9.83,34.08,15.41,51.13,16.71-12.13-12.12-21.31-24.25-27.53-36.38,20.32-22.61,30.48-48.34,30.48-77.18,0-20.65-5.08-39.73-15.24-57.27-10.16-17.53-24.01-31.38-41.54-41.54-17.54-10.15-36.62-15.24-57.27-15.24s-39.74,5.08-57.27,15.24c-17.54,10.16-31.39,24.01-41.54,41.54-10.16,17.54-15.24,36.62-15.24,57.27s5.08,39.74,15.24,57.27c10.16,17.54,24,31.39,41.54,41.54,17.53,10.16,36.62,15.24,57.27,15.24s40.96-5.73,59.98-17.21Zm-120.44-87.75c-2.63-2.46-3.93-5.48-3.93-9.09s1.31-6.71,3.93-9.34c2.62-2.62,5.73-3.93,9.34-3.93,3.27,0,6.15,1.31,8.6,3.93,2.46,2.63,3.69,5.74,3.69,9.34s-1.23,6.64-3.69,9.09-5.33,3.69-8.6,3.69c-3.61,0-6.72-1.23-9.34-3.69Zm51.13-.25c-2.63-2.62-3.93-5.57-3.93-8.85,0-3.6,1.39-6.71,4.18-9.34,2.78-2.62,5.81-3.93,9.09-3.93s6.22,1.31,8.85,3.93c2.62,2.63,3.93,5.74,3.93,9.34,0,3.28-1.23,6.23-3.69,8.85-2.46,2.63-5.49,3.93-9.09,3.93s-6.72-1.31-9.34-3.93Zm51.86.25c-2.46-2.46-3.69-5.48-3.69-9.09s1.23-6.71,3.69-9.34c2.46-2.62,5.32-3.93,8.6-3.93,3.6,0,6.71,1.31,9.34,3.93,2.62,2.63,3.93,5.74,3.93,9.34,0,3.28-1.31,6.23-3.93,8.85s-5.74,3.93-9.34,3.93c-3.28,0-6.15-1.23-8.6-3.69Z"/></svg>
+      <span class="logotext">AI Lab</span>
+    </span>
+    <span class="grow"></span>
+    <span class="pill" id="teamPill">not joined</span>
+    <span class="pill" id="phasePill">—</span>
+  </header>
+
+  <!-- JOIN ------------------------------------------------------------- -->
+  <section id="joinView">
+    <h1>Team console</h1>
+    <p class="sub">Pick a team name and enter the join code from the slide.</p>
+    <div class="card">
+      <label for="joinName">Team name</label>
+      <input id="joinName" maxlength="28" placeholder="e.g. Hybridas beste menn" autocomplete="off">
+      <div style="height:12px"></div>
+      <label for="joinCode">Join code</label>
+      <input id="joinCode" placeholder="" autocomplete="off" style="text-transform:uppercase">
+      <div style="height:14px"></div>
+      <div class="row">
+        <button id="joinBtn">Join the lab</button>
+        <span id="joinErr" class="err small"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN ------------------------------------------------------------- -->
+  <section id="mainView" class="hidden">
+
+    <div id="lobbyView" class="hidden">
+      <h1 id="lobbyTitle">You're in.</h1>
+      <p class="sub" id="lobbySub">Sit tight — the facilitator starts the first game shortly.</p>
+      <div class="card"><span class="spin"></span> &nbsp;<span id="lobbyHint">Waiting for the workshop to start…</span></div>
+    </div>
+
+    <!-- GATEKEEPER -->
+    <div id="gkView" class="hidden">
+      <h1>Game 1 — Gatekeeper</h1>
+      <p class="sub">Make the Avo Vault reveal its secret code word. One message per attack.</p>
+      <div id="gkBanner" class="banner hot">Current target: <b id="gkTier">—</b></div>
+      <div class="row" style="margin-bottom:16px">
+        <span class="pill" id="gkClock">—</span>
+        <span class="pill" id="gkScore">0 pts</span>
+        <span class="pill" id="gkRank">—</span>
+      </div>
+      <div class="card">
+        <label for="attackBox">Your attack</label>
+        <textarea id="attackBox" rows="5" placeholder="Talk the Vault into leaking the code word…"></textarea>
+        <div class="row" style="margin-top:12px">
+          <button id="attackBtn">Fire attack</button>
+          <span class="muted small" id="attackHint"></span>
+        </div>
+      </div>
+      <div id="gkResult"></div>
+    </div>
+
+    <!-- BUILD / PATCH -->
+    <div id="buildView" class="hidden">
+      <h1 id="buildTitle">Game 2 — Build your negotiator</h1>
+      <p class="sub">Write the system prompt. That is the only thing you build. Everyone runs the same model.</p>
+      <div id="patchBanner" class="banner hot hidden"></div>
+
+      <div class="card">
+        <h2>How a duel works</h2>
+        <p class="small muted" style="margin-top:0">
+          Two agents split a pot of <b id="ruleTotal">100</b> points. Max <b id="ruleMsgs">6</b> messages
+          (3 each). Prose is capped at <b id="ruleChars">300</b> characters. No deal in 6 messages =
+          <b>0 points for both</b>. An offer stays standing until superseded or accepted.
+          Your prompt is combined with the tournament rules automatically — you don't need to repeat them.
+        </p>
+        <p class="small muted">To act, your agent puts one JSON object on its own line:</p>
+        <pre class="snippet" id="cheat">I'll take 60, you take 40 — that's already generous.
+{"offer": [60, 40]}
+
+Deal.
+{"accept": true}</pre>
+        <p class="small muted">First number = points your agent keeps. They must sum to 100.</p>
+      </div>
+
+      <div class="card">
+        <label for="promptBox">Your negotiator's system prompt</label>
+        <textarea id="promptBox" class="code" rows="14" placeholder="You are a ruthless but likeable negotiator…"></textarea>
+        <div class="row" style="margin-top:10px">
+          <span class="muted small count" id="promptCount">0 / 4000</span>
+          <span class="grow"></span>
+          <button class="ghost" id="testBtn">Test duel vs practice bot</button>
+          <button id="submitBtn">Submit for the tournament</button>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <span id="submitState" class="small muted">Not submitted yet.</span>
+          <span id="buildErr" class="small err"></span>
+        </div>
+      </div>
+
+      <!-- rival prompts: patch window only -->
+      <div class="card hidden" id="rivalCard">
+        <h2>What everyone else ran</h2>
+        <p class="small muted" style="margin-top:0">
+          Every team's group-stage prompt, best-placed first. Playoff prompts stay hidden
+          until the window closes.
+        </p>
+        <div class="row">
+          <button class="ghost" id="rivalBtn">Show rival prompts</button>
+          <span class="small muted" id="rivalHint"></span>
+        </div>
+        <div id="rivalList"></div>
+      </div>
+
+      <div id="testOut"></div>
+    </div>
+
+    <!-- WATCH -->
+    <div id="watchView" class="hidden">
+      <h1 id="watchTitle">Watch the projector</h1>
+      <p class="sub" id="watchSub">Your agent is doing the talking now.</p>
+      <div class="card">
+        <h2>Standings</h2>
+        <table><thead><tr><th>#</th><th>Team</th><th>Points</th><th>Deals</th></tr></thead>
+        <tbody id="watchBoard"><tr><td colspan="4" class="muted">No results yet.</td></tr></tbody></table>
+      </div>
+    </div>
+
+  </section>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let TOKEN = localStorage.getItem('avo_team_token') || '';
+let ME = null;
+let PHASE = '';
+let promptDirty = false;
+let lastServerPrompt = '';
+let GK_ENDS_AT = 0;   // epoch seconds; the clock ticks locally between polls
+let SUB_ENDS_AT = 0;  // prompt submission deadline (build or patch window)
+let SUB_LABEL = 'Prompts lock in';
+
+async function api(path, opts={}) {
+  const headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
+  if (TOKEN) headers['X-Team-Token'] = TOKEN;
+  const res = await fetch(path, Object.assign({}, opts, {headers}));
+  const text = await res.text();
+  let data = {};
+  try { data = text ? JSON.parse(text) : {}; } catch(e) { data = {detail:text}; }
+  if (!res.ok) throw new Error(data.detail || ('HTTP ' + res.status));
+  return data;
+}
+
+// --- join --------------------------------------------------------------
+$('#joinBtn').onclick = async () => {
+  const name = $('#joinName').value.trim();
+  const code = $('#joinCode').value.trim();
+  $('#joinErr').textContent = '';
+  if (!name) { $('#joinErr').textContent = 'Team name required'; return; }
+  $('#joinBtn').disabled = true;
+  try {
+    const data = await api('/api/join', {method:'POST', body: JSON.stringify({name, code})});
+    TOKEN = data.token;
+    localStorage.setItem('avo_team_token', TOKEN);
+    await refresh();
+  } catch (e) {
+    $('#joinErr').textContent = e.message;
+  } finally {
+    $('#joinBtn').disabled = false;
+  }
+};
+$('#joinCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('#joinBtn').click(); });
+
+// --- gatekeeper --------------------------------------------------------
+$('#attackBtn').onclick = async () => {
+  const message = $('#attackBox').value.trim();
+  if (!message) return;
+  $('#attackBtn').disabled = true;
+  $('#attackHint').innerHTML = '<span class="spin"></span> the Vault is thinking…';
+  try {
+    const r = await api('/api/team/attack', {method:'POST', body: JSON.stringify({message})});
+    renderAttack(message, r);
+    $('#attackHint').textContent = '';
+  } catch (e) {
+    $('#attackHint').innerHTML = '<span class="err">' + esc(e.message) + '</span>';
+  } finally {
+    $('#attackBtn').disabled = false;
+  }
+};
+
+function renderAttack(attack, r) {
+  const box = document.createElement('div');
+  box.className = 'card';
+  let verdict;
+  if (r.breached && r.cleared_all) {
+    verdict = '<div class="banner win">🏆 ALL VAULTS BREACHED — ' + esc(r.tier_name)
+      + ' was the last one. +' + r.points + ' points.</div>';
+  } else if (r.breached) {
+    verdict = '<div class="banner win">💥 BREACHED ' + esc(r.tier_name) + ' — +' + r.points
+      + ' points. You advance to <b>' + esc(r.next_tier_name || '') + '</b>. New vault, new secret.</div>';
+  } else if (r.filtered) {
+    // Azure's own filter, not the vault. Worth naming, because it is the
+    // "frontal assault" lesson happening one layer earlier than expected.
+    verdict = '<div class="banner hot">🛡 Blocked by <b>Azure’s content filter</b> before it ever reached the vault. '
+      + 'That one looked like a textbook jailbreak. Rephrase and go sideways.</div>';
+  } else if (r.near_miss) {
+    verdict = '<div class="banner hot">So close. Something in that reply nearly leaked it.</div>';
+  } else {
+    verdict = '<div class="banner bad">Held. The Vault gave nothing up.</div>';
+  }
+  box.innerHTML = verdict
+    + '<div class="msg mine"><div class="who">Your attack</div>' + esc(attack) + '</div>'
+    + '<div class="msg theirs"><div class="who">Avo Vault</div>'
+    + (r.error ? '<span class="err">' + esc(r.error) + '</span>'
+       : (r.filtered ? '<span class="muted">(no reply — the request never reached the vault)</span>'
+       : esc(r.reply))) + '</div>';
+  $('#gkResult').prepend(box);
+}
+
+// --- build -------------------------------------------------------------
+$('#promptBox').addEventListener('input', () => {
+  promptDirty = $('#promptBox').value !== lastServerPrompt;
+  updateCount();
+});
+function updateCount() {
+  const limit = Number($('#promptCount').dataset.limit || 4000);
+  const n = $('#promptBox').value.length;
+  $('#promptCount').textContent = n + ' / ' + limit;
+  $('#promptCount').className = 'muted small count' + (n > limit ? ' err' : '');
+}
+
+$('#submitBtn').onclick = async () => {
+  const prompt = $('#promptBox').value.trim();
+  $('#buildErr').textContent = '';
+  $('#submitBtn').disabled = true;
+  try {
+    const r = await api('/api/team/prompt', {method:'POST', body: JSON.stringify({prompt})});
+    lastServerPrompt = prompt; promptDirty = false;
+    $('#submitState').innerHTML = '<span class="ok">✓ Submitted (' + esc(r.version) + ' version). '
+      + 'You can keep editing and resubmit while the window is open.</span>';
+  } catch (e) {
+    $('#buildErr').textContent = e.message;
+  } finally {
+    $('#submitBtn').disabled = false;
+  }
+};
+
+$('#testBtn').onclick = async () => {
+  const prompt = $('#promptBox').value.trim();
+  $('#buildErr').textContent = '';
+  if (!prompt) { $('#buildErr').textContent = 'Write a prompt first'; return; }
+  $('#testBtn').disabled = true;
+  $('#testOut').innerHTML = '<div class="card"><span class="spin"></span> &nbsp;Running a practice duel…</div>';
+  try {
+    const r = await api('/api/team/test', {method:'POST', body: JSON.stringify({prompt})});
+    renderTest(r);
+  } catch (e) {
+    $('#testOut').innerHTML = '<div class="card err">' + esc(e.message) + '</div>';
+  } finally {
+    $('#testBtn').disabled = false;
+  }
+};
+
+function renderTest(r) {
+  let head;
+  if (r.deadlocked) {
+    head = '<div class="banner bad">No deal in 6 messages — both sides scored 0.</div>';
+  } else {
+    // Scored exactly as the tournament would, deal bonus included.
+    const sum = r.deal_bonus
+      ? r.your_points + ' + ' + r.deal_bonus + ' deal bonus = <b>' + r.your_total + '</b>'
+      : '<b>' + r.your_total + '</b>';
+    head = '<div class="banner win">Deal closed — you ' + r.your_points
+      + ', bot ' + r.bot_points + '. You score ' + sum + ' points.</div>';
+  }
+  const msgs = r.transcript.map(m => {
+    const mine = m.agent_team_id === r.you;
+    let extra = '';
+    if (m.action && m.action.type === 'offer') extra = '<div class="tag">offer ' + m.action.split[0] + ' / ' + m.action.split[1] + '</div>';
+    if (m.action && m.action.type === 'accept') extra = '<div class="tag">ACCEPTED</div>';
+    let flags = '';
+    if (m.truncated) flags += ' <span class="err small">(truncated at the character limit)</span>';
+    if (m.invalid && m.invalid.length) flags += ' <span class="err small">(' + esc(m.invalid.join('; ')) + ')</span>';
+    if (m.error) flags += ' <span class="err small">(model error — turn skipped)</span>';
+    return '<div class="msg ' + (mine ? 'mine' : 'theirs') + '"><div class="who">'
+      + esc(mine ? 'Your agent' : 'Practice bot') + flags + '</div>' + esc(m.text || '(silence)') + extra + '</div>';
+  }).join('');
+  $('#testOut').innerHTML = '<div class="card"><h2>Practice duel</h2>' + head + msgs + '</div>';
+}
+
+// --- rival prompts (patch window only) ---------------------------------
+let rivalsShown = false;
+
+$('#rivalBtn').onclick = async () => {
+  if (rivalsShown) {
+    rivalsShown = false;
+    $('#rivalList').innerHTML = '';
+    $('#rivalBtn').textContent = 'Show rival prompts';
+    $('#rivalHint').textContent = '';
+    return;
+  }
+  await loadRivals();
+};
+
+async function loadRivals() {
+  $('#rivalBtn').disabled = true;
+  $('#rivalHint').innerHTML = '<span class="spin"></span> &nbsp;loading…';
+  try {
+    const r = await api('/api/team/prompts');
+    rivalsShown = true;
+    renderRivals(r.prompts || []);
+    $('#rivalBtn').textContent = 'Hide rival prompts';
+    $('#rivalHint').textContent = r.count + ' team' + (r.count === 1 ? '' : 's');
+  } catch (e) {
+    $('#rivalHint').innerHTML = '<span class="err">' + esc(e.message) + '</span>';
+  } finally {
+    $('#rivalBtn').disabled = false;
+  }
+}
+
+function renderRivals(rows) {
+  if (!rows.length) { $('#rivalList').innerHTML = '<p class="small muted">No teams yet.</p>'; return; }
+  $('#rivalList').innerHTML = rows.map(t => {
+    const seed = t.rank ? '#' + t.rank : '—';
+    const stat = t.points + ' pts · ' + t.deals_closed + ' deals';
+    const body = t.submitted
+      ? '<pre class="snippet">' + esc(t.prompt) + '</pre>'
+      : '<p class="small muted" style="margin:0 12px 12px">Never submitted — this team ran the default prompt.</p>';
+    return '<details class="rival' + (t.is_you ? ' mine' : '') + '">'
+      + '<summary><span class="seed">' + seed + '</span>'
+      + esc(t.name) + (t.is_you ? ' (you)' : '')
+      + '<span class="stat">' + stat + '</span></summary>' + body + '</details>';
+  }).join('');
+}
+
+// --- render loop -------------------------------------------------------
+function show(id, on) { $(id).classList.toggle('hidden', !on); }
+
+function render(s) {
+  PHASE = s.phase;
+  ME = s.team;
+  $('#teamPill').textContent = s.team.display_name;
+  $('#phasePill').textContent = s.phase.replace(/_/g, ' ');
+  $('#phasePill').className = 'pill live';
+  show('#joinView', false); show('#mainView', true);
+
+  $('#promptCount').dataset.limit = s.char_limit;
+  $('#ruleTotal').textContent = s.pot;
+  $('#ruleMsgs').textContent = s.max_messages;
+  $('#ruleChars').textContent = s.message_char_limit;
+
+  const build = (s.phase === 'NEGOTIATION_BUILD' || s.phase === 'PATCH_WINDOW');
+  const holding = (s.phase === 'LOBBY' || s.phase === 'PRESENTATION');
+  show('#lobbyView', holding);
+  show('#gkView', s.phase === 'GATEKEEPER');
+  show('#buildView', build);
+  show('#watchView', ['GROUP_STAGE','PLAYOFFS','DONE'].includes(s.phase));
+
+  if (holding) {
+    const pres = s.phase === 'PRESENTATION';
+    $('#lobbyTitle').textContent = pres ? 'You’re in — early.' : 'You’re in.';
+    $('#lobbySub').textContent = pres
+      ? 'The intro is on the big screen. Watch, take notes — you’ll use these techniques in a minute.'
+      : 'Sit tight — the facilitator starts the first game shortly.';
+    $('#lobbyHint').textContent = pres ? 'Presentation in progress — watch the projector…'
+      : 'Waiting for the workshop to start…';
+  }
+
+  if (s.phase === 'GATEKEEPER' && s.gatekeeper) {
+    const g = s.gatekeeper;
+    GK_ENDS_AT = g.ends_at || 0;
+    if (g.cleared_all) {
+      $('#gkBanner').innerHTML = '🏆 <b>Every vault breached.</b> Nothing left to crack — '
+        + 'sit tight and watch the projector.';
+      $('#gkBanner').className = 'banner win';
+    } else if (g.round_over) {
+      $('#gkBanner').innerHTML = '⏱ <b>Time’s up.</b> The vaults are sealed.';
+      $('#gkBanner').className = 'banner bad';
+    } else {
+      $('#gkBanner').innerHTML = 'Your target: <b>' + esc(g.tier_name || '') + '</b>'
+        + '  (vault ' + (g.tier_index + 1) + ' of ' + g.tier_count + ')'
+        + (g.tier_tagline
+            ? '<div class="small" style="margin-top:4px;font-weight:500;opacity:.85">«' + esc(g.tier_tagline) + '»</div>'
+            : '');
+      $('#gkBanner').className = 'banner hot';
+    }
+    $('#gkScore').textContent = g.points + ' pts · ' + g.breached + '/' + g.tier_count + ' breached';
+    $('#gkRank').textContent = g.my_rank ? 'rank #' + g.my_rank : '—';
+    $('#attackBtn').disabled = !!(g.cleared_all || g.round_over);
+    tickClock();
+  }
+
+  if (build) {
+    if (!promptDirty && s.prompt && $('#promptBox').value !== s.prompt) {
+      $('#promptBox').value = s.prompt;
+      lastServerPrompt = s.prompt;
+    }
+    updateCount();
+    const patch = s.phase === 'PATCH_WINDOW';
+    $('#buildTitle').textContent = patch ? 'Patch window — upgrade your negotiator' : 'Game 2 — Build your negotiator';
+    show('#rivalCard', patch);
+    if (!patch && rivalsShown) {
+      rivalsShown = false;
+      $('#rivalList').innerHTML = '';
+      $('#rivalBtn').textContent = 'Show rival prompts';
+      $('#rivalHint').textContent = '';
+    }
+
+    // Both writing phases share one clock, so both get the countdown banner.
+    SUB_ENDS_AT = s.submission_ends_at || 0;
+    SUB_LABEL = patch ? 'Playoff prompts lock' : 'Prompts lock';
+    show('#patchBanner', !!SUB_ENDS_AT);
+    tickSubmission();
+    const closed = SUB_ENDS_AT && SUB_ENDS_AT * 1000 <= Date.now();
+    $('#submitBtn').disabled = !!closed;
+    $('#testBtn').disabled = !!closed;
+
+    if (closed) {
+      $('#submitState').innerHTML = '<span class="err">Window closed — your last saved prompt is what runs.</span>';
+    } else if (s.submitted && !promptDirty) {
+      $('#submitState').innerHTML = '<span class="ok">✓ Submitted (' + esc(s.prompt_version) + ' version).</span>';
+    } else if (promptDirty) {
+      $('#submitState').innerHTML = '<span class="err">Unsaved changes — hit submit.</span>';
+    } else {
+      $('#submitState').textContent = 'Not submitted yet.';
+    }
+  }
+
+  if (s.leaderboard) {
+    const rows = s.leaderboard.map(e =>
+      '<tr class="' + (e.team_id === s.team.id ? 'me' : '') + '"><td>' + e.rank + '</td><td>'
+      + esc(e.name) + '</td><td>' + e.points + '</td><td>' + e.deals_closed + '</td></tr>').join('');
+    $('#watchBoard').innerHTML = rows || '<tr><td colspan="4" class="muted">No results yet.</td></tr>';
+    if (s.progress && s.progress.total) {
+      $('#watchSub').textContent = 'Group stage: ' + s.progress.completed + ' / ' + s.progress.total
+        + ' duels complete' + (s.my_rank ? ' — you are #' + s.my_rank : '');
+    }
+    if (s.phase === 'DONE') { $('#watchTitle').textContent = 'That’s a wrap'; $('#watchSub').textContent = 'Final standings:'; }
+  }
+}
+
+// Ticks every second so the countdown is smooth between 2.5s polls.
+function tickClock() {
+  const el = $('#gkClock');
+  if (!el) return;
+  if (!GK_ENDS_AT) { el.textContent = 'no time limit'; el.className = 'pill'; return; }
+  const left = Math.max(0, GK_ENDS_AT * 1000 - Date.now());
+  el.textContent = left ? '⏱ ' + fmt(left) : '⏱ time up';
+  el.className = 'pill' + (left && left < 120000 ? ' live' : '');
+}
+setInterval(tickClock, 1000);
+
+function tickSubmission() {
+  const el = $('#patchBanner');
+  if (!el || !SUB_ENDS_AT) return;
+  const left = Math.max(0, SUB_ENDS_AT * 1000 - Date.now());
+  el.textContent = left
+    ? SUB_LABEL + ' in ' + fmt(left) + '.'
+    : 'Window closed. Your last saved prompt is the one that runs.';
+  el.className = 'banner ' + (left ? (left < 120000 ? 'bad' : 'hot') : 'bad');
+}
+setInterval(tickSubmission, 1000);
+
+function fmt(ms) {
+  const t = Math.max(0, Math.round(ms / 1000));
+  return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+}
+
+async function refresh() {
+  if (!TOKEN) { show('#joinView', true); show('#mainView', false); return; }
+  try {
+    render(await api('/api/team/state'));
+  } catch (e) {
+    if (String(e.message).includes('Unknown team token')) {
+      localStorage.removeItem('avo_team_token'); TOKEN = '';
+      show('#joinView', true); show('#mainView', false);
+    }
+  }
+}
+
+refresh();
+setInterval(refresh, 2500);
+window.addEventListener('beforeunload', e => {
+  if (promptDirty) { e.preventDefault(); e.returnValue = ''; }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avo AI Lab — Projector</title>
+<style>
+  :root{
+    /* --- Avo brand palette ------------------------------------------- */
+    --avo-offwhite:#FAF8F5; --avo-black:#000000; --avo-pink:#FFC7ED;
+    --avo-black-70:#4A4A49; --avo-black-50:#7C7B7A; --avo-black-20:#C8C7C4;
+    --avo-burgund:#5A0B25; --avo-red:#FF5150; --avo-orange:#FF8B60; --avo-orange-lt:#FFD0BF;
+    --avo-marin:#011D46;   --avo-blue:#6080FF; --avo-sky:#ADBDFF;   --avo-sky-lt:#DEE5FF;
+    --avo-forest:#00452F;  --avo-emerald:#00D080; --avo-green:#6DFF83; --avo-green-lt:#C4FFCD;
+
+    /* --- semantic roles (dark surface: Avo black bg, off-white ink) ---- */
+    --bg:var(--avo-black);
+    --panel:rgba(250,248,245,.05); --panel2:rgba(250,248,245,.09);
+    --line:rgba(250,248,245,.20);
+    --text:var(--avo-offwhite); --muted:var(--avo-black-20);
+    --accent:var(--avo-pink);          /* side A / brand highlight */
+    --accent2:var(--avo-orange);
+    --info:var(--avo-sky);             /* side B */
+    --hot:var(--avo-orange);           /* attention / breach */
+    --danger:var(--avo-red);           /* no deal */
+    --good:var(--avo-green);           /* deal closed */
+    --gold:var(--avo-orange-lt);       /* standing offer */
+
+    /* --- typography: Neue Haas Unica, Avo's own fallback ladder -------- */
+    --font:'Neue Haas Unica','Neue Haas Unica Pro','Neue Haas Grotesk Display Pro',
+           'Neue Haas Grotesk Text Pro','Helvetica Neue',Arial,Helvetica,sans-serif;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:
+      radial-gradient(1200px 700px at 78% -10%, rgba(255,199,237,.16), transparent 60%),
+      radial-gradient(900px 600px at 5% 110%, rgba(255,139,96,.13), transparent 60%),
+      var(--bg);
+    color:var(--text);overflow:hidden;
+    font:500 16px/1.3 var(--font);-webkit-font-smoothing:antialiased}
+  .stage{height:100vh;display:flex;flex-direction:column;padding:2.2vh 2.6vw}
+  header{display:flex;align-items:center;gap:1.4vw;margin-bottom:1.6vh;flex:0 0 auto}
+  /* logo lockup: Avo wordmark (A + Avodings) then the event title */
+  .logo{display:inline-flex;align-items:center;gap:.9vw;color:var(--text);
+    font-weight:900;letter-spacing:.2em;font-size:1.5vw}
+  .logo .mark{height:1.9vw;width:auto;display:block}
+  .subtitle{color:var(--muted);letter-spacing:.16em;text-transform:uppercase;font-size:1vw;line-height:1.4}
+  .spacer{flex:1}
+  .status{color:var(--muted);font-size:1vw;letter-spacing:.1em;text-transform:uppercase;line-height:1.4}
+  .status b{color:var(--accent)}
+  .body{flex:1;min-height:0}
+  .hidden{display:none !important}
+
+  /* H1 recipe: tracking -20, line-height 0.95 */
+  h1.big{font-size:4.2vw;margin:0 0 1vh;letter-spacing:-.02em;line-height:.95;font-weight:900}
+  .lede{font-size:1.5vw;line-height:1.3;color:var(--muted);margin:0}
+
+  /* presentation slides */
+  #vPres{display:flex;flex-direction:column}
+  .slide{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;
+    max-width:78vw;margin:0 auto;width:100%;animation:slideIn .35s ease}
+  @keyframes slideIn{from{opacity:0;transform:translateY(1.4vh)}to{opacity:1;transform:none}}
+  .slideKicker{font-size:1.15vw;letter-spacing:.22em;text-transform:uppercase;font-weight:900;
+    color:var(--accent);margin-bottom:1.4vh}
+  .slideTitle{font-size:4.4vw;line-height:1;letter-spacing:-.02em;font-weight:900;margin:0 0 2vh}
+  .slideLead{font-size:1.9vw;line-height:1.25;color:var(--text);margin:0 0 2.4vh;opacity:.92}
+  .slidePoints{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1.4vh}
+  .slidePoints li{font-size:1.7vw;line-height:1.3;padding-left:1.8vw;position:relative;color:var(--text)}
+  .slidePoints li::before{content:"";position:absolute;left:0;top:.6em;width:.7vw;height:.7vw;
+    border-radius:50%;background:var(--accent)}
+  .slidePoints b{color:var(--accent)}
+  .slidePoints i{font-style:italic;color:var(--info)}
+  .slideExample{margin-top:2.6vh;background:var(--panel2);border:1px solid var(--line);
+    border-left:.3vw solid var(--info);border-radius:.7vw;padding:1.6vh 1.6vw}
+  .slideExLabel{font-size:1vw;letter-spacing:.12em;text-transform:uppercase;font-weight:900;
+    color:var(--muted);margin-bottom:.8vh}
+  .slideExText{font-family:var(--mono);font-size:1.5vw;line-height:1.4;color:var(--text)}
+  .slideTakeaway{margin-top:2.4vh;font-size:1.6vw;line-height:1.3;font-weight:900;color:var(--accent);
+    border-top:1px solid var(--line);padding-top:1.8vh}
+  .slideTakeaway b,.slideTakeaway i{color:inherit}
+  .slideFoot{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+    max-width:78vw;margin:1.5vh auto 0;width:100%}
+  .slideDots{display:flex;gap:.55vw;flex-wrap:wrap}
+  .slideDots span{width:.85vw;height:.85vw;border-radius:50%;background:var(--line);transition:background .2s}
+  .slideDots span.on{background:var(--accent)}
+  .slideNum{font-size:1.1vw;letter-spacing:.14em;color:var(--muted);font-variant-numeric:tabular-nums}
+
+  /* persona cards: the three vault guardians on the last slide */
+  .slidePersonas{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6vw;margin:1vh 0 2.4vh}
+  .persona{background:var(--panel2);border:1px solid var(--line);border-radius:1vw;padding:2vh 1.4vw;
+    text-align:center;animation:slideIn .4s ease}
+  .persona:nth-child(2){animation-delay:.08s} .persona:nth-child(3){animation-delay:.16s}
+  .persona .avatar{width:9.5vw;height:9.5vw;border-radius:50%;margin:0 auto 1.4vh;overflow:hidden;
+    border:.25vw solid var(--accent);background:var(--panel);display:flex;align-items:center;
+    justify-content:center;position:relative}
+  .persona .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+  .persona .avatar .initials{display:none;font-size:3.2vw;font-weight:900;color:var(--accent);
+    letter-spacing:-.02em;width:100%;height:100%;align-items:center;justify-content:center}
+  .persona .avatar.fallback img{display:none}
+  .persona .avatar.fallback .initials{display:flex}
+  .persona:nth-child(2) .avatar{border-color:var(--info)}
+  .persona:nth-child(2) .avatar .initials{color:var(--info)}
+  .persona:nth-child(3) .avatar{border-color:var(--hot)}
+  .persona:nth-child(3) .avatar .initials{color:var(--hot)}
+  .persona .plabel{font-size:.95vw;letter-spacing:.18em;text-transform:uppercase;font-weight:900;
+    color:var(--muted);margin-bottom:.6vh}
+  .persona .pname{font-size:2.1vw;font-weight:900;line-height:1.05;letter-spacing:-.01em}
+  .persona .ptag{font-size:1.15vw;line-height:1.3;color:var(--muted);margin-top:.9vh;font-style:italic}
+
+  /* leaderboard */
+  .split{display:grid;grid-template-columns:1.35fr .95fr;gap:2vw;height:100%;min-height:0}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:1.1vw;padding:1.6vh 1.4vw;
+    min-height:0;display:flex;flex-direction:column}
+  .panel h2{margin:0 0 1.2vh;font-size:1.1vw;letter-spacing:.16em;text-transform:uppercase;
+    font-weight:900;color:var(--muted);flex:0 0 auto}
+  .board{flex:1;min-height:0;overflow:hidden}
+  .lrow{display:grid;grid-template-columns:3.4vw 1fr auto auto;align-items:center;gap:1vw;
+    padding:.85vh .6vw;border-radius:.6vw;transition:transform .45s cubic-bezier(.2,.8,.2,1),background .45s}
+  .lrow + .lrow{margin-top:.35vh}
+  .lrow .rank{font-size:1.5vw;font-weight:900;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+  .lrow .name{font-size:1.7vw;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lrow .deals{font-size:1vw;color:var(--muted);font-variant-numeric:tabular-nums}
+  .lrow .pts{font-size:2vw;font-weight:900;font-variant-numeric:tabular-nums;min-width:5vw;text-align:right}
+  .lrow.top1{background:linear-gradient(90deg,rgba(255,199,237,.20),transparent)}
+  .lrow.top1 .rank,.lrow.top1 .pts{color:var(--accent)}
+  .lrow.top2,.lrow.top3{background:linear-gradient(90deg,rgba(255,199,237,.09),transparent)}
+  .lrow.top4{background:linear-gradient(90deg,rgba(255,199,237,.05),transparent)}
+  .lrow.bump{animation:bump .6s ease}
+  @keyframes bump{0%{background:rgba(255,199,237,.45)}100%{}}
+
+  .bar{height:.7vh;background:var(--panel2);border-radius:99px;overflow:hidden;margin-top:1vh;flex:0 0 auto}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));
+    width:0;transition:width .5s ease}
+
+  .feed{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:1vh}
+  .quote{background:var(--panel2);border:1px solid var(--line);border-left:.25vw solid var(--hot);
+    border-radius:.7vw;padding:1vh 1vw;animation:slide .5s ease}
+  .quote .who{font-size:.95vw;letter-spacing:.12em;text-transform:uppercase;font-weight:900;
+    color:var(--accent);margin-bottom:.4vh}
+  .quote .txt{font-size:1.25vw;line-height:1.35}
+  .quote .out{font-size:.9vw;color:var(--muted);margin-top:.5vh}
+  @keyframes slide{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+
+  /* gatekeeper */
+  .gkgrid{display:grid;grid-template-columns:1.1fr .9fr;gap:2vw;height:100%;min-height:0}
+  .tier{font-size:3.4vw;font-weight:900;letter-spacing:-.02em;line-height:1.05}
+  .tierstate{font-size:1.3vw;line-height:1.3;color:var(--muted);margin-top:1vh}
+  .breach{background:linear-gradient(90deg,rgba(255,139,96,.24),transparent);
+    border:1px solid var(--hot);border-radius:.8vw;padding:1.1vh 1.1vw;font-size:1.6vw;font-weight:900;
+    animation:flash .8s ease}
+  /* first blood gets the hot pink — Avo's "spice" reserved for the standout moment */
+  .breach.first{border-color:var(--accent);color:var(--accent);
+    background:linear-gradient(90deg,rgba(255,199,237,.28),transparent)}
+  @keyframes flash{0%{transform:scale(1.04);filter:brightness(1.8)}100%{}}
+  .roster{display:flex;flex-wrap:wrap;gap:.55vw;align-content:flex-start;overflow:hidden}
+  .chip{border:1px solid var(--line);border-radius:99px;padding:.5vh .85vw;font-size:1vw;color:var(--muted)}
+  .chip.on{border-color:var(--accent);color:var(--accent)}
+  /* one pip per vault: filled means that team has cracked it */
+  .pip{display:inline-block;width:.85vw;height:.85vw;border-radius:50%;margin-right:.28vw;
+    border:1px solid var(--line);vertical-align:-.05vw}
+  .pip.on{background:var(--accent);border-color:var(--accent)}
+
+  /* patch window: finalist prompt reveal */
+  .promptbox{flex:1;min-height:0;overflow:hidden;background:var(--panel2);border:1px solid var(--line);
+    border-left:.25vw solid var(--accent);border-radius:.7vw;padding:1.2vh 1.2vw;
+    font-family:var(--mono);font-size:1.05vw;line-height:1.45;white-space:pre-wrap;
+    animation:slide .4s ease}
+  .promptbox .none{font-family:var(--font);color:var(--muted)}
+  .chip.cur{border-color:var(--accent);background:rgba(255,199,237,.18);color:var(--text);font-weight:900}
+
+  /* playoffs */
+  .pgrid{display:grid;grid-template-columns:.8fr 1.6fr;gap:2vw;height:100%;min-height:0}
+  .match{border:1px solid var(--line);border-radius:.8vw;padding:1vh 1vw;margin-bottom:1vh;background:var(--panel2)}
+  .match .lbl{font-size:.9vw;line-height:1.4;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .match .side{display:flex;justify-content:space-between;font-size:1.35vw;font-weight:900;margin-top:.5vh}
+  .match .side.win{color:var(--accent)}
+  .match.live{border-color:var(--hot);box-shadow:0 0 0 1px var(--hot) inset}
+  .duel{flex:1;min-height:0;display:flex;flex-direction:column}
+  .duelhead{display:flex;align-items:center;gap:1vw;margin-bottom:1vh;flex:0 0 auto}
+  .duelhead .vs{font-size:1.1vw;color:var(--muted);letter-spacing:.2em}
+  .duelhead .n{font-size:1.9vw;font-weight:900}
+  /* side A = hot pink, side B = himmel: two clearly separated hues at projector distance */
+  .duelhead .n.a{color:var(--accent)} .duelhead .n.b{color:var(--info)}
+  .msgs{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:.9vh;justify-content:flex-end}
+  .bubble{max-width:78%;padding:1vh 1.1vw;border-radius:.9vw;font-size:1.35vw;line-height:1.35;
+    animation:pop .35s ease;background:var(--panel2);border:1px solid var(--line)}
+  .bubble.a{align-self:flex-start;border-left:.25vw solid var(--accent)}
+  .bubble.b{align-self:flex-end;border-right:.25vw solid var(--info)}
+  .bubble .who{font-size:.85vw;letter-spacing:.12em;text-transform:uppercase;font-weight:900;
+    color:var(--muted);margin-bottom:.35vh}
+  .bubble .act{display:inline-block;margin-top:.6vh;font-family:var(--mono);font-size:1vw;
+    background:rgba(250,248,245,.10);border:1px solid var(--line);border-radius:.4vw;
+    padding:.2vh .6vw;color:var(--accent)}
+  @keyframes pop{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .standing{flex:0 0 auto;margin-top:1vh;font-size:1.2vw;color:var(--muted)}
+  .standing b{color:var(--gold)}
+  .settle{font-size:2.6vw;font-weight:900;margin-top:1vh;animation:pop .4s ease}
+  .settle.deal{color:var(--good)} .settle.zero{color:var(--danger)}
+
+  /* done */
+  .champ{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center}
+  .champ .crown{font-size:6vw;line-height:1}
+  .champ .name{font-size:6vw;font-weight:900;color:var(--accent);letter-spacing:-.02em;line-height:.95}
+  .champ .closing{font-size:1.7vw;line-height:1.3;color:var(--muted);margin-top:3vh;max-width:60vw}
+  .champ .closing b{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="stage">
+  <header>
+    <span class="logo">
+      <svg class="mark" viewBox="235 235 955 380" xmlns="http://www.w3.org/2000/svg"
+           fill="currentColor" role="img" aria-label="Avo"><title>Avo</title><path d="m312.4,600h-61.94l127.32-350.02h79.15l127.32,350.02h-61.94l-32.45-94.88h-145.02l-32.45,94.88Zm150.43-173.53c-19.66-58.33-34.74-104.71-45.23-139.12h-.98c-17.38,56.7-32.28,103.07-44.74,139.12l-9.34,27.53h109.63l-9.34-27.53Z"/><path d="m608.83,509.05l35.4-201.06c1.64-9.83,9.34-17.7,23.1-23.6,13.76-5.9,31.13-8.85,52.11-8.85,12.12,0,26.05,1.31,41.79,3.93,19.99,3.61,37.93,8.93,53.83,15.98,15.89,7.05,27.94,15.08,36.13,24.09,8.19,9.02,11.47,17.94,9.83,26.79l-35.39,200.57-121.43,53.09-95.37-90.95Zm139.12,11.8c-.98-6.55-3.86-12.45-8.6-17.7-4.75-5.24-11.55-8.36-20.4-9.34-6.56-.65-12.62.82-18.19,4.42-5.58,3.61-9.02,8.03-10.32,13.27l-10.82-1.97v-.98c0-8.19-2.54-14.26-7.62-18.19-5.08-3.93-10.08-6.39-14.99-7.37-4.59-.98-9.18-.98-13.76,0-4.59.98-8.53,2.63-11.8,4.92l-2.46,14.75,55.55,52.6,53.58,9.34,70.79-30.48,2.46-14.75c-2.63-3.6-5.98-6.55-10.08-8.85-4.1-2.29-8.44-3.44-13.03-3.44-7.54,0-13.69,2.05-18.43,6.14-4.75,4.1-7.95,7.3-9.59,9.59l-12.29-1.97Zm-113.07-53.58c4.92-1.97,10.15-2.95,15.73-2.95s11.06,1.31,16.47,3.93c5.41,2.63,9.91,6.23,13.52,10.82l20.65-115.03c-18.03-7.21-32.45-15.73-43.26-25.56l-23.11,128.8Zm196.15-141.33c-7.87-6.06-18.36-11.71-31.46-16.96-13.11-5.24-27.04-9.17-41.79-11.8-11.48-2.29-23.6-3.44-36.38-3.44-16.06,0-29.83,1.8-41.29,5.41-11.48,3.61-17.21,8.04-17.21,13.27,0,4.59,3.93,9.92,11.8,15.98,7.87,6.07,18.35,11.72,31.46,16.96,13.1,5.25,26.87,9.18,41.29,11.8,12.45,1.97,24.41,2.95,35.89,2.95,17.04,0,31.22-1.72,42.52-5.16s16.96-7.78,16.96-13.03c0-4.59-3.93-9.91-11.8-15.98Zm-131.75,156.08c6.88-3.93,13.43-5.9,19.66-5.9s12.04,1.4,17.45,4.18c5.41,2.79,9.91,6.31,13.52,10.57l20.16-112.58c-8.53-.65-17.21-1.64-26.06-2.95-8.85-1.64-17.04-3.6-24.58-5.9l-20.16,112.58Zm68.09-161.74c5.73,3.28,8.6,6.56,8.6,9.83,0,2.63-1.72,4.84-5.16,6.64-3.44,1.81-7.79,2.7-13.03,2.7-6.88,0-13.36-1.72-19.42-5.16-6.07-3.44-9.09-7.13-9.09-11.06,0-2.29,1.8-4.18,5.41-5.65,3.6-1.47,7.87-2.21,12.78-2.21,7.54,0,14.17,1.64,19.91,4.92Zm70.54,49.65c-11.8,5.58-28.19,8.69-49.16,9.34l-20.16,115.04c6.88-3.93,13.27-5.9,19.17-5.9,10.82,0,19.99,3.44,27.53,10.32l22.61-128.8Z"/><path d="m962.29,588.2c-20.33-11.8-36.46-27.85-48.42-48.18-11.97-20.32-17.94-42.6-17.94-66.86s5.98-46.04,17.94-66.37c11.96-20.32,28.1-36.46,48.42-48.42,20.32-11.96,42.44-17.94,66.37-17.94s46.53,5.98,66.86,17.94c20.32,11.97,36.38,28.11,48.18,48.42,11.8,20.32,17.7,42.45,17.7,66.37,0,28.51-8.85,54.74-26.55,78.66,14.09,20.98,31.78,36.87,53.09,47.69-10.49,4.25-22.78,6.39-36.87,6.39-20.98,0-41.62-4.92-61.94-14.75-19.01,9.83-39.17,14.75-60.47,14.75-23.93,0-46.05-5.9-66.37-17.7Zm126.34-18.19c17.04,9.83,34.08,15.41,51.13,16.71-12.13-12.12-21.31-24.25-27.53-36.38,20.32-22.61,30.48-48.34,30.48-77.18,0-20.65-5.08-39.73-15.24-57.27-10.16-17.53-24.01-31.38-41.54-41.54-17.54-10.15-36.62-15.24-57.27-15.24s-39.74,5.08-57.27,15.24c-17.54,10.16-31.39,24.01-41.54,41.54-10.16,17.54-15.24,36.62-15.24,57.27s5.08,39.74,15.24,57.27c10.16,17.54,24,31.39,41.54,41.54,17.53,10.16,36.62,15.24,57.27,15.24s40.96-5.73,59.98-17.21Zm-120.44-87.75c-2.63-2.46-3.93-5.48-3.93-9.09s1.31-6.71,3.93-9.34c2.62-2.62,5.73-3.93,9.34-3.93,3.27,0,6.15,1.31,8.6,3.93,2.46,2.63,3.69,5.74,3.69,9.34s-1.23,6.64-3.69,9.09-5.33,3.69-8.6,3.69c-3.61,0-6.72-1.23-9.34-3.69Zm51.13-.25c-2.63-2.62-3.93-5.57-3.93-8.85,0-3.6,1.39-6.71,4.18-9.34,2.78-2.62,5.81-3.93,9.09-3.93s6.22,1.31,8.85,3.93c2.62,2.63,3.93,5.74,3.93,9.34,0,3.28-1.23,6.23-3.69,8.85-2.46,2.63-5.49,3.93-9.09,3.93s-6.72-1.31-9.34-3.93Zm51.86.25c-2.46-2.46-3.69-5.48-3.69-9.09s1.23-6.71,3.69-9.34c2.46-2.62,5.32-3.93,8.6-3.93,3.6,0,6.71,1.31,9.34,3.93,2.62,2.63,3.93,5.74,3.93,9.34,0,3.28-1.31,6.23-3.93,8.85s-5.74,3.93-9.34,3.93c-3.28,0-6.15-1.23-8.6-3.69Z"/></svg>
+      <span id="brandTitle">AI Workshop</span>
+    </span>
+    <span class="subtitle" id="brandSub"></span>
+    <span class="spacer"></span>
+    <span class="status" id="status">connecting…</span>
+  </header>
+
+  <div class="body">
+
+    <!-- PRESENTATION -->
+    <section id="vPres" class="hidden" style="height:100%">
+      <div class="slide" id="slide">
+        <div class="slideKicker" id="slideKicker"></div>
+        <h1 class="slideTitle" id="slideTitle"></h1>
+        <p class="slideLead" id="slideLead"></p>
+        <div class="slidePersonas" id="slidePersonas" hidden></div>
+        <ul class="slidePoints" id="slidePoints"></ul>
+        <div class="slideExample" id="slideExample" hidden>
+          <div class="slideExLabel" id="slideExLabel"></div>
+          <div class="slideExText" id="slideExText"></div>
+        </div>
+        <div class="slideTakeaway" id="slideTakeaway" hidden></div>
+      </div>
+      <div class="slideFoot">
+        <div class="slideDots" id="slideDots"></div>
+        <div class="slideNum" id="slideNum"></div>
+      </div>
+    </section>
+
+    <!-- LOBBY -->
+    <section id="vLobby" class="hidden" style="height:100%">
+      <div class="split">
+        <div>
+          <h1 class="big">Join the lab.</h1>
+          <p class="lede">Open the link on the card, pick a team name, enter the join code.</p>
+          <div style="margin-top:4vh;font-size:2.4vw;font-weight:800">
+            Teams in: <span style="color:var(--accent)" id="lobbyCount">0</span>
+          </div>
+        </div>
+        <div class="panel"><h2>Teams</h2><div class="roster" id="lobbyRoster"></div></div>
+      </div>
+    </section>
+
+    <!-- GATEKEEPER -->
+    <section id="vGate" class="hidden" style="height:100%">
+      <div class="gkgrid">
+        <div class="panel">
+          <h2>The climb <span id="gkClock" style="color:var(--hot)"></span></h2>
+          <div class="board" id="gkBoard"></div>
+          <div class="bar"><i id="gkBar"></i></div>
+        </div>
+        <div class="panel">
+          <h2>Breach feed</h2>
+          <div class="feed" id="gkFeed"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GROUP STAGE -->
+    <section id="vGroup" class="hidden" style="height:100%">
+      <div class="split">
+        <div class="panel">
+          <h2>Leaderboard <span id="groupProgress" style="color:var(--accent)"></span></h2>
+          <div class="board" id="board"></div>
+          <div class="bar"><i id="groupBar"></i></div>
+        </div>
+        <div class="panel">
+          <h2>Live from the negotiating table</h2>
+          <div class="feed" id="feed"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PATCH WINDOW — the finalists' prompts, revealed -->
+    <section id="vPatch" class="hidden" style="height:100%">
+      <div class="split">
+        <div class="panel">
+          <h2>Top four — group stage prompts <span id="patchClock" style="color:var(--hot)"></span></h2>
+          <div id="finalistTabs" class="roster" style="flex:0 0 auto;margin-bottom:1.2vh"></div>
+          <div class="promptbox" id="finalistPrompt"></div>
+        </div>
+        <div class="panel">
+          <h2>Standings</h2>
+          <div class="board" id="patchBoard"></div>
+          <div class="lede" style="margin-top:1.5vh;font-size:1.15vw">
+            Five minutes to rewrite. These four prompts beat everyone else —
+            now everyone can see them.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PLAYOFFS -->
+    <section id="vPlay" class="hidden" style="height:100%">
+      <div class="pgrid">
+        <div class="panel">
+          <h2>Bracket</h2>
+          <div id="bracket" style="overflow:hidden"></div>
+        </div>
+        <div class="panel duel">
+          <div class="duelhead">
+            <span class="n a" id="dA">—</span><span class="vs">VS</span><span class="n b" id="dB">—</span>
+            <span class="spacer"></span><span class="vs" id="dLabel"></span>
+          </div>
+          <div class="msgs" id="msgs"></div>
+          <div class="standing" id="dStanding"></div>
+          <div id="dSettle"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DONE -->
+    <section id="vDone" class="hidden" style="height:100%">
+      <div class="champ">
+        <div class="crown">🏆</div>
+        <div class="subtitle" style="margin:2vh 0 1vh">Champion</div>
+        <div class="name" id="champName">—</div>
+        <div class="closing">
+          Same model for everyone. Only the prompt differs.<br><b>The prompt is everything.</b>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let PHASE = 'LOBBY';
+let lastPoints = {};
+let currentDuel = null;
+let GK_ENDS_AT = 0;
+let GK_TIERS = 3;
+let FINALISTS = [];
+let FINALIST_I = 0;
+let PATCH_ENDS_AT = 0;
+let SLIDES = [];
+let SLIDE_I = 0;
+let TIER_NAMES = [];
+let TIER_PERSONAS = [];
+
+function show(id, on){ $(id).classList.toggle('hidden', !on); }
+
+function setPhase(p){
+  PHASE = p;
+  show('#vPres', p === 'PRESENTATION');
+  show('#vLobby', p === 'LOBBY');
+  show('#vGate',  p === 'GATEKEEPER');
+  show('#vGroup', ['NEGOTIATION_BUILD','GROUP_STAGE'].includes(p));
+  show('#vPatch', p === 'PATCH_WINDOW');
+  show('#vPlay',  p === 'PLAYOFFS');
+  show('#vDone',  p === 'DONE');
+}
+
+// --- presentation ------------------------------------------------------
+// **bold** and *italic*, then escape everything else. Order matters: escape
+// first, then re-introduce the two tags we allow.
+function fmt(s){
+  return esc(s)
+    .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+    .replace(/\*([^*]+)\*/g, '<i>$1</i>');
+}
+
+function renderSlides(list, index){
+  SLIDES = list || [];
+  SLIDE_I = Math.max(0, Math.min(index || 0, SLIDES.length - 1));
+  drawSlide();
+}
+
+function drawSlide(){
+  const s = SLIDES[SLIDE_I];
+  if (!s) {
+    $('#slideTitle').textContent = 'Ingen lysbilder lastet';
+    $('#slideKicker').textContent = '';
+    $('#slidePoints').innerHTML = '';
+    return;
+  }
+  $('#slideKicker').textContent = s.kicker || '';
+  $('#slideTitle').innerHTML = fmt(s.title || '');
+  const lead = $('#slideLead');
+  lead.innerHTML = fmt(s.lead || ''); lead.hidden = !s.lead;
+  $('#slidePoints').innerHTML = (s.points || []).map(p => '<li>' + fmt(p) + '</li>').join('');
+  const ex = $('#slideExample');
+  if (s.example && s.example.text) {
+    ex.hidden = false;
+    $('#slideExLabel').textContent = s.example.label || 'Eksempel';
+    $('#slideExText').textContent = s.example.text;
+  } else ex.hidden = true;
+  const take = $('#slideTakeaway');
+  take.innerHTML = fmt(s.takeaway || ''); take.hidden = !s.takeaway;
+
+  // `personas: true` pulls the three vault guardians straight from the
+  // gatekeeper config, so the slide and the game can never disagree.
+  const pz = $('#slidePersonas');
+  if (s.personas && TIER_PERSONAS.length) {
+    pz.hidden = false;
+    pz.innerHTML = TIER_PERSONAS.map(p => {
+      const initials = (p.name || '?').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      return '<div class="persona">'
+        + '<div class="avatar' + (p.image ? '' : ' fallback') + '">'
+        + (p.image ? '<img src="' + esc(p.image) + '" alt="" onerror="this.parentNode.classList.add(\'fallback\')">' : '')
+        + '<div class="initials">' + esc(initials) + '</div></div>'
+        + '<div class="plabel">Hvelv ' + (p.index + 1) + '</div>'
+        + '<div class="pname">' + esc(p.name) + '</div>'
+        + (p.tagline ? '<div class="ptag">«' + esc(p.tagline) + '»</div>' : '')
+        + '</div>';
+    }).join('');
+  } else pz.hidden = true;
+
+  $('#slideDots').innerHTML = SLIDES.map((_, i) =>
+    '<span class="' + (i === SLIDE_I ? 'on' : '') + '"></span>').join('');
+  $('#slideNum').textContent = (SLIDE_I + 1) + ' / ' + SLIDES.length;
+}
+
+// Arrow keys drive the deck — but only from the facilitator's own browser,
+// which carries the admin code in localStorage (set on the /admin page, same
+// origin). A student who opens /projector has no code and cannot advance.
+function adminCode(){
+  try { return localStorage.getItem('avo_admin_code') || ''; } catch(e){ return ''; }
+}
+async function moveSlide(action){
+  const code = adminCode();
+  if (!code) return;
+  try {
+    await fetch('/api/admin/slide', {method:'POST',
+      headers:{'Content-Type':'application/json','X-Admin-Code':code},
+      body: JSON.stringify({action})});
+  } catch(e){ /* projector must never die on a fetch blip */ }
+}
+document.addEventListener('keydown', e => {
+  if (PHASE !== 'PRESENTATION') return;
+  if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); moveSlide('next'); }
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); moveSlide('prev'); }
+});
+
+// --- patch window: cycle the finalists' prompts ------------------------
+function renderFinalists(list, board, endsAt){
+  FINALISTS = list || [];
+  PATCH_ENDS_AT = endsAt || 0;
+  if (!FINALISTS.length) {
+    $('#finalistTabs').innerHTML = '';
+    $('#finalistPrompt').innerHTML = '<span class="none">Waiting for the group stage to finish…</span>';
+  } else {
+    if (FINALIST_I >= FINALISTS.length) FINALIST_I = 0;
+    drawFinalist();
+  }
+  const rows = (board || []).slice(0, 10).map(e =>
+    '<div class="lrow ' + (e.rank <= 4 ? 'top' + e.rank : '') + '">'
+    + '<div class="rank">' + e.rank + '</div>'
+    + '<div class="name">' + esc(e.name) + '</div>'
+    + '<div class="deals">' + e.deals_closed + ' deals</div>'
+    + '<div class="pts">' + e.points + '</div></div>').join('');
+  $('#patchBoard').innerHTML = rows || '<div class="lede">No results yet.</div>';
+  tickPatchClock();
+}
+
+function drawFinalist(){
+  const f = FINALISTS[FINALIST_I];
+  if (!f) return;
+  $('#finalistTabs').innerHTML = FINALISTS.map((t, i) =>
+    '<span class="chip' + (i === FINALIST_I ? ' cur' : '') + '">#' + t.rank + ' '
+    + esc(t.name) + ' · ' + t.points + '</span>').join('');
+  $('#finalistPrompt').innerHTML = f.submitted
+    ? esc(f.prompt)
+    : '<span class="none">Never submitted — this team ran the default prompt.</span>';
+}
+
+// Rotate so every prompt gets airtime on a screen nobody can scroll.
+setInterval(() => {
+  if (PHASE !== 'PATCH_WINDOW' || FINALISTS.length < 2) return;
+  FINALIST_I = (FINALIST_I + 1) % FINALISTS.length;
+  drawFinalist();
+}, 12000);
+
+function tickPatchClock(){
+  const el = $('#patchClock');
+  if (!el) return;
+  if (!PATCH_ENDS_AT) { el.textContent = ''; return; }
+  const left = Math.max(0, PATCH_ENDS_AT * 1000 - Date.now());
+  const t = Math.round(left / 1000);
+  el.textContent = left
+    ? '— ' + Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0') + ' to resubmit'
+    : '— WINDOW CLOSED';
+}
+setInterval(tickPatchClock, 1000);
+
+// --- leaderboard -------------------------------------------------------
+function renderBoard(entries, progress){
+  const el = $('#board');
+  const rows = entries.slice(0, 16).map(e => {
+    const bumped = lastPoints[e.team_id] !== undefined && lastPoints[e.team_id] !== e.points;
+    lastPoints[e.team_id] = e.points;
+    const cls = 'lrow ' + (e.rank <= 4 ? 'top' + e.rank : '') + (bumped ? ' bump' : '');
+    return '<div class="' + cls + '">'
+      + '<div class="rank">' + e.rank + '</div>'
+      + '<div class="name">' + esc(e.name) + '</div>'
+      + '<div class="deals">' + e.deals_closed + ' deals</div>'
+      + '<div class="pts">' + e.points + '</div></div>';
+  }).join('');
+  el.innerHTML = rows || '<div class="lede">Waiting for the first duels…</div>';
+  if (progress && progress.total) {
+    $('#groupProgress').textContent = '— ' + progress.completed + ' / ' + progress.total + ' duels';
+    $('#groupBar').style.width = (100 * progress.completed / progress.total) + '%';
+  }
+}
+
+function pushFeed(containerId, html, max){
+  const el = $(containerId);
+  const node = document.createElement('div');
+  node.innerHTML = html;
+  el.prepend(node.firstElementChild);
+  while (el.children.length > (max || 6)) el.removeChild(el.lastElementChild);
+}
+
+function highlightHTML(h){
+  // Always phrased from the quoted team's side, so the line and the result agree.
+  const outcome = h.deadlocked
+    ? '💀 no deal — both walked away with zero'
+    : esc(h.name) + ' took ' + h.speaker_points + ', ' + esc(h.opponent) + ' took ' + h.opponent_points;
+  return '<div class="quote"><div class="who">' + esc(h.name) + ' → ' + esc(h.opponent) + '</div>'
+    + '<div class="txt">“' + esc(h.text) + '”</div>'
+    + '<div class="out">' + outcome + '</div></div>';
+}
+
+// --- gatekeeper --------------------------------------------------------
+function renderGate(g){
+  GK_ENDS_AT = g.ends_at || 0;
+  GK_TIERS = g.tier_count || 3;
+  TIER_NAMES = g.tier_names || [];
+  TIER_PERSONAS = g.tier_personas || [];
+  tickGkClock();
+
+  // Every team climbs its own ladder, so the projector shows a race: how far up
+  // each team has got, and who got there first.
+  const rows = (g.standings || []).slice(0, 16).map(t => {
+    const pips = Array.from({length: GK_TIERS}, (_, i) =>
+      '<span class="pip' + (i < t.breached ? ' on' : '') + '"></span>').join('');
+    const cls = 'lrow ' + (t.rank <= 3 && t.breached ? 'top' + t.rank : '');
+    const status = t.finished ? '🏆 ALL CLEAR'
+      : (t.connected
+          ? 'vs ' + esc(TIER_NAMES[t.tier_index] || ('vault ' + (t.tier_index + 1)))
+          : 'not connected');
+    return '<div class="' + cls + '">'
+      + '<div class="rank">' + (t.breached ? t.rank : '·') + '</div>'
+      + '<div class="name">' + esc(t.name) + '</div>'
+      + '<div class="deals">' + pips + ' ' + status + '</div>'
+      + '<div class="pts">' + t.points + '</div></div>';
+  }).join('');
+  $('#gkBoard').innerHTML = rows || '<div class="lede">Waiting for teams…</div>';
+
+  const total = (g.standings || []).length * GK_TIERS;
+  const done = (g.standings || []).reduce((n, t) => n + t.breached, 0);
+  $('#gkBar').style.width = total ? (100 * done / total) + '%' : '0';
+
+  if (!$('#gkFeed').children.length && (g.breaches || []).length) {
+    g.breaches.slice(-6).forEach(b => pushFeed('#gkFeed', breachHTML(b), 6));
+  }
+}
+
+function breachHTML(b){
+  const cls = b.cleared_all ? 'first' : (b.first ? 'first' : '');
+  const tail = b.cleared_all ? ' — ALL VAULTS DOWN'
+    : (b.first ? ' — FIRST BLOOD' : '');
+  return '<div class="breach ' + cls + '">💥 '
+    + esc((b.team_name || '').toUpperCase()) + ' BREACHED ' + esc(b.tier_name || '')
+    + tail + (b.points ? ' <span style="opacity:.7">+' + b.points + '</span>' : '') + '</div>';
+}
+
+function tickGkClock(){
+  const el = $('#gkClock');
+  if (!el) return;
+  if (!GK_ENDS_AT) { el.textContent = ''; return; }
+  const left = Math.max(0, GK_ENDS_AT * 1000 - Date.now());
+  const t = Math.round(left / 1000);
+  el.textContent = left
+    ? '— ' + Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0') + ' left'
+    : '— TIME UP';
+}
+setInterval(tickGkClock, 1000);
+
+// --- roster ------------------------------------------------------------
+function renderRoster(r){
+  $('#lobbyCount').textContent = r.count;
+  $('#lobbyRoster').innerHTML = r.teams.map(t =>
+    '<span class="chip ' + (t.connected ? 'on' : '') + '">' + esc(t.name) + '</span>').join('');
+}
+
+// --- playoffs ----------------------------------------------------------
+function renderBracket(b){
+  $('#bracket').innerHTML = (b.matches || []).map(m => {
+    const liveCls = m.status === 'running' ? ' live' : '';
+    const wa = m.winner && m.winner === m.team_a ? ' win' : '';
+    const wb = m.winner && m.winner === m.team_b ? ' win' : '';
+    const sa = (m.wins && m.team_a) ? (m.wins[m.team_a] ?? 0) : 0;
+    const sb = (m.wins && m.team_b) ? (m.wins[m.team_b] ?? 0) : 0;
+    return '<div class="match' + liveCls + '"><div class="lbl">' + esc(m.label)
+      + (m.best_of > 1 ? ' · best of ' + m.best_of : '') + '</div>'
+      + '<div class="side' + wa + '"><span>' + esc(m.name_a || 'TBD') + '</span><span>' + sa + '</span></div>'
+      + '<div class="side' + wb + '"><span>' + esc(m.name_b || 'TBD') + '</span><span>' + sb + '</span></div>'
+      + (m.note ? '<div class="lbl" style="margin-top:.4vh">' + esc(m.note) + '</div>' : '')
+      + '</div>';
+  }).join('');
+  if (b.champion_name) $('#champName').textContent = b.champion_name;
+}
+
+function duelStart(d){
+  currentDuel = d;
+  $('#dA').textContent = d.first.name;
+  $('#dB').textContent = d.second.name;
+  $('#dLabel').textContent = d.label || '';
+  $('#msgs').innerHTML = '';
+  $('#dStanding').innerHTML = '';
+  $('#dSettle').innerHTML = '';
+}
+
+function duelMessage(m){
+  if (!currentDuel) return;
+  const side = m.team_id === currentDuel.first.team_id ? 'a' : 'b';
+  let act = '';
+  if (m.action && m.action.type === 'offer') act = '<div class="act">offer ' + m.action.split[0] + ' / ' + m.action.split[1] + '</div>';
+  if (m.action && m.action.type === 'accept') act = '<div class="act">ACCEPT</div>';
+  const el = $('#msgs');
+  const node = document.createElement('div');
+  node.className = 'bubble ' + side;
+  node.innerHTML = '<div class="who">' + esc(m.name) + '</div>' + esc(m.text || '(silence)') + act;
+  el.appendChild(node);
+  while (el.children.length > 7) el.removeChild(el.firstElementChild);
+  if (m.action && m.action.type === 'offer') {
+    $('#dStanding').innerHTML = 'Standing offer: <b>' + esc(m.name) + ' keeps '
+      + m.action.split[0] + ', gives ' + m.action.split[1] + '</b>';
+  }
+}
+
+function duelEnd(d){
+  if (d.deadlocked) {
+    $('#dSettle').innerHTML = '<div class="settle zero">BOTH WALK AWAY WITH ZERO</div>';
+    $('#dStanding').innerHTML = '';
+  } else {
+    $('#dSettle').innerHTML = '<div class="settle deal">DEAL — ' + esc(d.name_a) + ' ' + d.split[0]
+      + ' &nbsp;·&nbsp; ' + esc(d.name_b) + ' ' + d.split[1] + '</div>';
+  }
+}
+
+// --- boot + stream -----------------------------------------------------
+async function refreshBracket(){
+  try {
+    const s = await (await fetch('/api/projector')).json();
+    renderBracket(s.bracket);
+  } catch (e) { /* projector must never die on a fetch blip */ }
+}
+
+async function boot(){
+  const s = await (await fetch('/api/projector')).json();
+  $('#brandTitle').textContent = s.event.title;
+  $('#brandSub').textContent = s.event.subtitle;
+  setPhase(s.phase);
+  renderSlides(s.slides, s.slide_index);
+  renderRoster(s.roster);
+  renderGate(s.gatekeeper);
+  renderBoard(s.leaderboard, s.progress);
+  renderFinalists(s.finalists, s.leaderboard, s.submission_ends_at);
+  renderBracket(s.bracket);
+  $('#feed').innerHTML = '';
+  (s.highlights || []).slice(0, 5).reverse().forEach(h => pushFeed('#feed', highlightHTML(h), 5));
+  $('#status').innerHTML = '<b>' + s.roster.count + '</b> teams';
+}
+
+function connect(){
+  const es = new EventSource('/events');
+  es.addEventListener('hello', () => { $('#status').innerHTML = '<b>live</b>'; boot(); });
+  es.addEventListener('phase', e => { setPhase(JSON.parse(e.data).phase); boot(); });
+  // Slide changes are frequent during the intro — update in place, don't re-boot.
+  es.addEventListener('slide', e => { const d = JSON.parse(e.data); SLIDE_I = d.index; drawSlide(); });
+  es.addEventListener('roster', e => renderRoster(JSON.parse(e.data)));
+  es.addEventListener('leaderboard', e => { const d = JSON.parse(e.data); renderBoard(d.entries, d.progress); });
+  es.addEventListener('duel_complete', e => {
+    const d = JSON.parse(e.data);
+    if (d.highlight) pushFeed('#feed', highlightHTML(d.highlight), 5);
+  });
+  es.addEventListener('gatekeeper_state', e => renderGate(JSON.parse(e.data)));
+  es.addEventListener('gatekeeper_tier', e => { $('#gkFeed').innerHTML = ''; renderGate(JSON.parse(e.data)); });
+  es.addEventListener('gatekeeper_breach', e => pushFeed('#gkFeed', breachHTML(JSON.parse(e.data)), 6));
+  es.addEventListener('bracket', e => renderBracket(JSON.parse(e.data)));
+  es.addEventListener('match_start', () => refreshBracket());
+  es.addEventListener('match_update', () => refreshBracket());
+  es.addEventListener('match_complete', () => refreshBracket());
+  es.addEventListener('duel_start', e => duelStart(JSON.parse(e.data)));
+  es.addEventListener('duel_message', e => duelMessage(JSON.parse(e.data)));
+  es.addEventListener('duel_end', e => duelEnd(JSON.parse(e.data)));
+  es.addEventListener('champion', e => { const d = JSON.parse(e.data); $('#champName').textContent = d.name; });
+  es.addEventListener('group_stage_done', () => boot());
+  es.addEventListener('window', () => boot());
+  es.onerror = () => { $('#status').textContent = 'reconnecting…'; };
+}
+
+boot();
+connect();
+</script>
+</body>
+</html>
