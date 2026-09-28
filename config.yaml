@@ -18,7 +18,7 @@ negotiation:
   allow_prompt_injection: true # facilitator policy toggle (see README §policy)
   team_prompt_char_limit: 4000
   test_duel_cooldown_s: 15     # per-team rate limit on practice duels
-  build_window_minutes: 15     # NEGOTIATION_BUILD clock; starts on phase entry
+  build_window_minutes: 10     # NEGOTIATION_BUILD clock; starts on phase entry
   patch_window_minutes: 5      # PATCH_WINDOW clock
   seed: 20260804               # deterministic tie-break coin flips
 

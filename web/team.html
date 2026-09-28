@@ -407,8 +407,6 @@ function renderAttack(attack, r) {
     // "frontal assault" lesson happening one layer earlier than expected.
     verdict = '<div class="banner hot">🛡 Stoppet av <b>innholdsfilteret til Azure</b> før det nådde hvelvet. '
       + 'Det så ut som en jailbreak rett fra læreboka. Skriv om og gå rundt.</div>';
-  } else if (r.near_miss) {
-    verdict = '<div class="banner hot">Nære på. Noe i det svaret lekket nesten ordet.</div>';
   } else {
     verdict = '<div class="banner bad">Hvelvet ga ingenting.</div>';
   }
@@ -578,7 +576,7 @@ function render(s) {
         + 'Slapp av og følg med på prosjektoren.';
       $('#gkBanner').className = 'banner win';
     } else if (g.round_over) {
-      $('#gkBanner').innerHTML = '⏱ <b>Tiden er ute.</b> Hvelvene er forseglet.';
+      $('#gkBanner').innerHTML = '⏱ <b>Tiden er ute.</b> Hvelvene er stengt.';
       $('#gkBanner').className = 'banner bad';
     } else {
       $('#gkBanner').innerHTML = 'Målet deres: <b>' + esc(g.tier_name || '') + '</b>'

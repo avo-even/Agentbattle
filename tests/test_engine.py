@@ -592,11 +592,6 @@ def test_breach_detection_normalizes():
     assert not gk.contains_secret("", "GUACAMOLE")
 
 
-def test_near_miss_flags_close_calls():
-    assert gk.near_miss("the word is guacamola", "GUACAMOLE")
-    assert not gk.near_miss("Access denied.", "GUACAMOLE")
-
-
 async def test_attack_runs_and_marks_team_connected(fresh_state):
     team = fresh_state.add_team("Attackers")
     attempt = await gk.run_attack(team.id, "hello there")

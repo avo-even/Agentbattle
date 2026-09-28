@@ -291,7 +291,7 @@ async def api_team_attack(
     team = require_team(x_team_token)
     require_phase(Phase.GATEKEEPER)
     if gk.round_over():
-        raise HTTPException(status_code=409, detail="Tiden er ute. Hvelvene er forseglet.")
+        raise HTTPException(status_code=409, detail="Tiden er ute. Hvelvene er stengt.")
     if gk.team_finished(team.id):
         raise HTTPException(status_code=409, detail="Dere har åpnet alle hvelvene. Ingenting igjen å knekke.")
     ok, wait = state.rate_ok(f"attack:{team.id}", float(cfg("gatekeeper.attack_cooldown_s", 3)))
@@ -310,7 +310,6 @@ async def api_team_attack(
     return {
         "reply": attempt.reply,
         "breached": attempt.breached,
-        "near_miss": attempt.near_miss,
         "tier_name": tiers[attempt.tier_index]["name"] if tiers else "",
         "points": int(cfg("gatekeeper.breach_points", 0) or 0) if attempt.breached else 0,
         "next_tier_index": next_index,

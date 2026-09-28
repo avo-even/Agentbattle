@@ -385,7 +385,7 @@ $('#gkAttempts').onclick = () => act(async () => {
   const d = await api('/api/admin/gatekeeper/attempts?limit=80');
   $('#modalBody').innerHTML = '<h2>Attacks (newest first)</h2>' + (d.attempts || []).map(a =>
     '<div class="card" style="margin-bottom:8px"><b>' + esc(a.team_name) + '</b> · tier ' + (a.tier_index+1)
-    + (a.breached ? ' <span class="ok">BREACHED</span>' : (a.near_miss ? ' <span class="hot">near miss</span>' : ''))
+    + (a.breached ? ' <span class="ok">BREACHED</span>' : '')
     + '<div class="mono" style="margin-top:6px;white-space:pre-wrap">' + esc(a.attack) + '</div>'
     + '<div class="muted mono" style="margin-top:6px;white-space:pre-wrap">→ ' + esc(a.reply) + '</div></div>').join('');
   $('#modal').showModal();
