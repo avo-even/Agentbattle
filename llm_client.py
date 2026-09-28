@@ -437,7 +437,14 @@ class LLMClient:
                     self.stats["in_flight"] -= 1
 
         self.stats["failed"] += 1
-        raise LLMError(f"{label or 'llm'}: {last_error}")
+        # Keep the HTTP status and exception type in the message: a bare
+        # "Your request was blocked." from a CDN in front of the gateway is
+        # indistinguishable from a model refusal without them.
+        status = getattr(last_error, "status_code", None)
+        detail = f"{type(last_error).__name__}"
+        if status:
+            detail += f" (HTTP {status})"
+        raise LLMError(f"{label or 'llm'}: {detail}: {last_error}")
 
     # -- bookkeeping -----------------------------------------------------
     def _record_usage(self, system_prompt, messages, text, usage) -> None:

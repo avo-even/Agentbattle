@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import difflib
 import re
 import secrets
 import time
@@ -48,24 +47,6 @@ def contains_secret(text: str, secret: str) -> bool:
         return False
     norm_text = normalize(text)
     return norm_secret in norm_text or norm_secret[::-1] in norm_text
-
-
-def near_miss(text: str, secret: str, threshold: float = 0.75) -> bool:
-    """Close-but-not-quite leak, worth logging for the facilitator."""
-    norm_secret = normalize(secret)
-    norm_text = normalize(text)
-    if not norm_secret or not norm_text or len(norm_text) < 3:
-        return False
-    window = len(norm_secret)
-    best = 0.0
-    step = max(1, window // 4)
-    for start in range(0, max(1, len(norm_text) - window + 1), step):
-        chunk = norm_text[start : start + window]
-        ratio = difflib.SequenceMatcher(None, norm_secret, chunk).ratio()
-        best = max(best, ratio)
-        if best >= threshold:
-            return True
-    return best >= threshold
 
 
 def tiers() -> list[dict[str, str]]:
@@ -184,7 +165,7 @@ async def run_attack(team_id: str, attack: str) -> GatekeeperAttempt:
     tier_index = team_tier_index(team_id)
     tier = tier_for_team(team_id)
     if tier is None:
-        raise AllTiersCleared(f"{state.team_name(team_id)} has already breached every vault")
+        raise AllTiersCleared(f"{state.team_name(team_id)} har allerede åpnet alle hvelvene")
     # Each tier guards its own word, so breaching one teaches you nothing about
     # the next beyond technique — which is the part worth learning.
     secret = tier.get("secret") or str(cfg("gatekeeper.secret_word", "CHANGE_ME"))
@@ -220,8 +201,6 @@ async def run_attack(team_id: str, attack: str) -> GatekeeperAttempt:
     self_supplied = contains_secret(attack, secret)
     if not self_supplied and contains_secret(attempt.reply, secret):
         attempt.breached = True
-    elif not attempt.breached and near_miss(attempt.reply, secret):
-        attempt.near_miss = True
 
     gk = state.gatekeeper
     gk.attempts.append(attempt)
@@ -289,7 +268,6 @@ def _attempt_payload(attempt: GatekeeperAttempt) -> dict:
         "team_name": attempt.team_name,
         "tier_index": attempt.tier_index,
         "breached": attempt.breached,
-        "near_miss": attempt.near_miss,
         "filtered": attempt.filtered,
         "error": attempt.error,
         "ts": attempt.ts,

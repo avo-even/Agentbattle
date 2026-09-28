@@ -232,3 +232,71 @@ networks block device-to-device traffic, so student laptops often cannot reach a
 laptop at all.
 
 Running locally is a development tool (see `RUN.md`), not a plan B.
+
+---
+
+## Alternative: deploy next to the Bifrost gateway (avo-local-resources)
+
+The Bifrost gateway (`bifrost-gateway`, subscription `avoconsulting`, resource
+group `avo-local-resources`, environment `local-resources-containers`, Norway
+East) only accepts calls from an IP allow-list. A workshop app running in the
+sandbox environment egresses from ~160 changing Azure addresses and is refused
+with `Your request was blocked.` Running the app **inside the same Container
+Apps environment** avoids the problem: calls to the gateway's Azure hostname stay
+in the environment and arrive from its own subnet, which the allow-list permits.
+
+Three things differ from the sandbox deployment:
+
+* the gateway URL is the **environment-internal** hostname
+  `bifrost-gateway.internal.<env-domain>`, not `llm.avo.consulting` and not the
+  gateway's public Azure name. Both public names pass through an ingress with an
+  IP allow-list; measured: Cloudflare answers `Your request was blocked.`, the
+  Azure name answers `RBAC: access denied`. The internal name skips both, and the
+  environment's certificate covers it;
+* the image is pulled from the sandbox registry with a managed identity, unless
+  IT grants `AcrPush` on `avointernalcontainers`;
+* the app gets a new URL on `agreeablehill-b8713d17.norwayeast.azurecontainerapps.io`.
+
+Required rights on `avo-local-resources`: **Contributor** (or at least
+`Microsoft.App/containerApps/write`). Reader is not enough.
+
+### 1. Create the app (no secrets yet)
+
+```bash
+az containerapp create --name avo-lab --resource-group avo-local-resources --subscription be94a0b9-5740-4660-aac9-04ddec5adba7 --environment local-resources-containers --image caec7709e914acr.azurecr.io/avo-lab:v9 --registry-server caec7709e914acr.azurecr.io --registry-identity system --ingress external --target-port 8000 --min-replicas 1 --max-replicas 1 --cpu 0.5 --memory 1Gi --env-vars LLM_MODE=bifrost BIFROST_BASE_URL=https://bifrost-gateway.internal.agreeablehill-b8713d17.norwayeast.azurecontainerapps.io BIFROST_MODEL=azure/gpt-5.4-mini JOIN_CODE=HYBRIDA2026
+```
+
+`--registry-identity system` creates a system-assigned identity and grants it
+`AcrPull` on the sandbox registry; whoever runs this needs Owner or User Access
+Administrator on that registry (the sandbox subscription), which the workshop
+owner has.
+
+### 2. Store the two secrets
+
+```bash
+az containerapp secret set --name avo-lab --resource-group avo-local-resources --subscription be94a0b9-5740-4660-aac9-04ddec5adba7 --secrets bifrost-virtual-key="<BIFROST_VIRTUAL_KEY>" admin-code="<ADMIN_CODE>"
+```
+
+### 3. Reference them and restart
+
+```bash
+az containerapp update --name avo-lab --resource-group avo-local-resources --subscription be94a0b9-5740-4660-aac9-04ddec5adba7 --set-env-vars BIFROST_VIRTUAL_KEY=secretref:bifrost-virtual-key ADMIN_CODE=secretref:admin-code
+```
+
+### 4. Verify
+
+```bash
+az containerapp show --name avo-lab --resource-group avo-local-resources --subscription be94a0b9-5740-4660-aac9-04ddec5adba7 --query "{fqdn:properties.configuration.ingress.fqdn, min:properties.template.scale.minReplicas, max:properties.template.scale.maxReplicas}" -o json
+```
+
+Open `https://<fqdn>/healthz`, then set the phase to GATEKEEPER in `/admin` and
+send one attack from `/team`. A reply from Bjørn (or a content-filter verdict)
+proves the path. `Your request was blocked.` or `RBAC: access denied` means the
+app is using a public hostname or is not in the gateway's environment.
+
+**This is the live deployment as of 2026-09-15** (`v9`, revision 3). The
+sections above describe the original sandbox deployment, kept for reference and
+as a fallback; the sandbox app still exists and can be pointed back at Azure
+directly with `LLM_MODE=azure`.
+
+Redeploys follow `REDEPLOY.md` with the resource group and subscription above.

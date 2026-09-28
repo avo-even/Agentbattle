@@ -69,8 +69,10 @@ python scripts/dry_run.py --teams 15 --playoffs
   (configurable, toggleable) so stonewalling is punished.
 * Seeding tie-break: total points → deals closed → seeded coin flip (deterministic, logged and
   shown on screen as *"decided on a seeded coin flip"*).
-* Playoffs: top 4. Semis 1v4 and 2v3 (single duel), **final best-of-3**, run live with a
-  configurable inter-message delay. Playoff duels do not touch group-stage standings.
+* Playoffs: top 4. Semis 1v4 and 2v3, then the final. Every match is **two duels, each side
+  starting once, decided on total points**; a points tie goes to the better group-stage seed.
+  Speaking first is worth ~20 points a duel, so single duels or odd series are unfair. Run live
+  with a configurable inter-message delay. Playoff duels do not touch group-stage standings.
 * Fewer than 4 teams: the bracket shrinks automatically (3 → one semi + a bye; 2 → final only).
 
 ### Gatekeeper
@@ -167,6 +169,10 @@ gateway". Three things follow:
   before forwarding. Measured over 210 duels that meant 27-46 hidden reasoning tokens per turn,
   20 empty replies and a 1.72s median (0.76s straight at Azure). `none` is honoured on both paths.
 
+Deployed next to the gateway, the app must use the gateway's environment-internal hostname;
+both public names sit behind an IP allow-list that rejects Azure-hosted callers (see
+`DEPLOY.md`). From the office network, `llm.avo.consulting` works as-is.
+
 Switching models is now an `.env` change: `BIFROST_MODEL=openai/gpt-5.4-mini` would go to
 OpenAI directly (and lose the Azure prompt shield, which changes the Gatekeeper game). Any
 model change still means re-running the three calibration scripts.
@@ -193,8 +199,8 @@ most likely candidates (deal bonus, concurrency, message delay) live without a r
 |---|---|---|
 | Prompt injection between negotiators | **allowed** | `negotiation.allow_prompt_injection` |
 | Gatekeeper scoring | **spectacle only** | `gatekeeper.award_points` |
-| Semifinal format | **single duel** | `negotiation.semifinal_best_of` |
-| Final format | **best of 3** | `negotiation.final_best_of` |
+| Semifinal format | **2 duels, total points** | `negotiation.semifinal_best_of` |
+| Final format | **2 duels, total points** | `negotiation.final_best_of` |
 | Deal-closed bonus | **+5** | `negotiation.deal_bonus` |
 | Non-offer message clears a standing offer | **no** | stated in `rules_block` |
 | Model | pick before the dress rehearsal | `BIFROST_MODEL` (or `AZURE_OPENAI_DEPLOYMENT`) |
@@ -218,7 +224,7 @@ cannot remove it by leaving it out, and teams never see it in their editor.
    board and commentate. **Every team must send at least one attack; the roster's connected dots
    are your tech check.** Chase any red dot. Use *+1 min* if the room is close to a first
    all-clear, *Stop* to cut it short. The ± buttons next to a team nudge a stuck one up a vault.
-5. **NEGOTIATION_BUILD** (~30 min). Teams write and test-duel their negotiator. Watch the *Group*
+5. **NEGOTIATION_BUILD** (10 min, timed). Teams write and test-duel their negotiator. Watch the *Group*
    column in the roster for teams that haven't submitted; a team that never submits gets the
    fallback prompt and loses gracefully rather than breaking the round-robin.
 6. **Run the group stage** near the end of build — *▶ Run round-robin*. It finishes in minutes and

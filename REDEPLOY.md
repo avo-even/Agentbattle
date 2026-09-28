@@ -5,12 +5,13 @@ fresh subscription, see `DEPLOY.md` instead.
 
 | | |
 |---|---|
-| subscription | `avo-internal-sandbox` |
-| resource group | `rg-ntnu-ws-2026` |
+| subscription | `avoconsulting` (`be94a0b9-…`) — the app lives next to the Bifrost gateway |
+| resource group | `avo-local-resources` |
 | container app | `avo-lab` |
-| registry | `caec7709e914acr` |
-| live URL | https://avo-lab.lemonfield-d248f0b0.swedencentral.azurecontainerapps.io |
-| currently deployed | `v6` (`v7` is built and waiting in the registry) |
+| registry | `caec7709e914acr` (still in `avo-internal-sandbox`; the app pulls with the registry's admin credentials) |
+| Contributor on the group | via PIM, activate before redeploying (Azure portal → Privileged Identity Management → My roles → Azure resources) |
+| live URL | https://avo-lab.agreeablehill-b8713d17.norwayeast.azurecontainerapps.io |
+| currently deployed | `v9` — Bifrost backend, `reasoning_effort: none`, concurrency 10 |
 
 ---
 
@@ -32,7 +33,7 @@ says what is live at a glance.
 Build the image in Azure (no local Docker needed, takes 2–4 minutes):
 
 ```bash
-$env:PYTHONUTF8='1'; az acr build --registry caec7709e914acr --image avo-lab:v7 --file Dockerfile .
+$env:PYTHONUTF8='1'; az acr build --registry caec7709e914acr --image avo-lab:v10 --file Dockerfile .
 ```
 
 The `PYTHONUTF8` prefix matters on Windows: the build log contains non-ASCII
@@ -47,7 +48,7 @@ az acr repository show-tags --name caec7709e914acr --repository avo-lab --orderb
 Point the app at it:
 
 ```bash
-az containerapp update --name avo-lab --resource-group rg-ntnu-ws-2026 --image caec7709e914acr.azurecr.io/avo-lab:v7
+az containerapp update --name avo-lab --resource-group avo-local-resources --subscription be94a0b9-5740-4660-aac9-04ddec5adba7 --image caec7709e914acr.azurecr.io/avo-lab:v10
 ```
 
 This touches **only** the image. Env vars, secrets and the single-replica pin are
@@ -56,14 +57,14 @@ left alone, which is why it is safer than re-running `az containerapp up`.
 ## Confirm it took
 
 ```bash
-az containerapp logs show --name avo-lab --resource-group rg-ntnu-ws-2026 --tail 30
+az containerapp logs show --name avo-lab --resource-group avo-local-resources --subscription be94a0b9-5740-4660-aac9-04ddec5adba7 --tail 30
 ```
 
 You want the startup banner reporting `mode bifrost (azure/gpt-5.4-mini)`, your real join
 code, and no `ADMIN_CODE is still the default` warning.
 
 ```bash
-az containerapp show --name avo-lab --resource-group rg-ntnu-ws-2026 --query "{image:properties.template.containers[0].image, min:properties.template.scale.minReplicas, max:properties.template.scale.maxReplicas}" -o table
+az containerapp show --name avo-lab --resource-group avo-local-resources --subscription be94a0b9-5740-4660-aac9-04ddec5adba7 --query "{image:properties.template.containers[0].image, min:properties.template.scale.minReplicas, max:properties.template.scale.maxReplicas}" -o table
 ```
 
 `min` and `max` must both be **1**. Two replicas means two independent
@@ -87,17 +88,17 @@ az acr repository show-tags --name caec7709e914acr --repository avo-lab --orderb
 Then point the app at one:
 
 ```bash
-az containerapp update --name avo-lab --resource-group rg-ntnu-ws-2026 --image caec7709e914acr.azurecr.io/avo-lab:gatekeeper-v2
+az containerapp update --name avo-lab --resource-group avo-local-resources --subscription be94a0b9-5740-4660-aac9-04ddec5adba7 --image caec7709e914acr.azurecr.io/avo-lab:gatekeeper-v2
 ```
 
 To check which image is live and how many revisions exist:
 
 ```bash
-az containerapp revision list --name avo-lab --resource-group rg-ntnu-ws-2026 --query "[].{name:name, image:properties.template.containers[0].image, active:properties.active, created:properties.createdTime}" -o table
+az containerapp revision list --name avo-lab --resource-group avo-local-resources --subscription be94a0b9-5740-4660-aac9-04ddec5adba7 --query "[].{name:name, image:properties.template.containers[0].image, active:properties.active, created:properties.createdTime}" -o table
 ```
 
 If that ever lists more than one, `az containerapp revision activate --name avo-lab
---resource-group rg-ntnu-ws-2026 --revision <name>` becomes available too.
+--resource-group avo-local-resources --subscription be94a0b9-5740-4660-aac9-04ddec5adba7 --revision <name>` becomes available too.
 
 ---
 
@@ -130,13 +131,13 @@ If you only need to wipe state (a botched dry run, a stuck stage) and the code i
 already correct, restart the revision instead of redeploying. Get its name:
 
 ```bash
-az containerapp show --name avo-lab --resource-group rg-ntnu-ws-2026 --query "properties.latestRevisionName" -o tsv
+az containerapp show --name avo-lab --resource-group avo-local-resources --subscription be94a0b9-5740-4660-aac9-04ddec5adba7 --query "properties.latestRevisionName" -o tsv
 ```
 
 Then restart it:
 
 ```bash
-az containerapp revision restart --name avo-lab --resource-group rg-ntnu-ws-2026 --revision <revision-name>
+az containerapp revision restart --name avo-lab --resource-group avo-local-resources --subscription be94a0b9-5740-4660-aac9-04ddec5adba7 --revision <revision-name>
 ```
 
 Faster still, and safe to do mid-session: `/admin` → type `RESET` → *Wipe event*.
@@ -147,16 +148,16 @@ That clears the game without touching the container at all.
 ## Rotate a secret
 
 ```bash
-az containerapp secret set --name avo-lab --resource-group rg-ntnu-ws-2026 --secrets azure-openai-key="<new key>" admin-code="<new admin code>"
+az containerapp secret set --name avo-lab --resource-group avo-local-resources --subscription be94a0b9-5740-4660-aac9-04ddec5adba7 --secrets bifrost-virtual-key="<new virtual key>" admin-code="<new admin code>"
 ```
 
 Secrets do not take effect until the container restarts:
 
 ```bash
-az containerapp update --name avo-lab --resource-group rg-ntnu-ws-2026 --image caec7709e914acr.azurecr.io/avo-lab:v5
+az containerapp update --name avo-lab --resource-group avo-local-resources --subscription be94a0b9-5740-4660-aac9-04ddec5adba7 --image caec7709e914acr.azurecr.io/avo-lab:v9
 ```
 
-Non-secret values (join code, deployment name) go through `--set-env-vars` on the
+Non-secret values (join code, gateway URL, model) go through `--set-env-vars` on the
 same `update` command.
 
 ---
@@ -181,7 +182,9 @@ Newest first, as of the last check:
 
 | tag | what it is |
 |---|---|
-| `v7` | **built, not yet deployed.** Persona vaults (Bjørn / Pia / Arne Benjamin) with photos, the Norwegian presentation phase, "Språkmodell hackathon" title, content-filter verdicts, Arne Benjamin softened twice |
+| `v9` | **live.** Bifrost gateway backend (internal hostname), `none` reasoning, concurrency 10, full error text in the admin panel |
+| `v8` | Bifrost backend, first attempt; ran in the sandbox and was blocked by the gateway's IP allow-list |
+| `v7` | built, never deployed. Persona vaults (Bjørn / Pia / Arne Benjamin) with photos, the Norwegian presentation phase, "Språkmodell hackathon" title, content-filter verdicts, Arne Benjamin softened twice |
 | `v6` | **live.** Built outside this session on 2026-09-09 15:18; contents uncertain |
 | `v5` | Tied ranks, tougher practice bot, build-window timer, practice-duel deal bonus, fixed projector captions, finalist prompt reveal |
 | `gatekeeper-v2` | per-team vault ladder, +50 per breach, 15 minute round |
