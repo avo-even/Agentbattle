@@ -10,7 +10,7 @@ changes. This page is what you need in the room.
 
 ## The three URLs
 
-Base: **https://avo-lab.lemonfield-d248f0b0.swedencentral.azurecontainerapps.io**
+Base: **https://avo-lab.agreeablehill-b8713d17.norwayeast.azurecontainerapps.io**
 
 | | URL | Who |
 |---|---|---|
@@ -24,7 +24,7 @@ Container App. Students need only the team URL and the join code.
 Confirm it is awake before the session starts:
 
 ```bash
-curl https://avo-lab.lemonfield-d248f0b0.swedencentral.azurecontainerapps.io/healthz
+curl https://avo-lab.agreeablehill-b8713d17.norwayeast.azurecontainerapps.io/healthz
 ```
 
 Expect `{"ok":true,"phase":"LOBBY","teams":0}`. If `phase` is anything else, or

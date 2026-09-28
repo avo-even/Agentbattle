@@ -120,7 +120,7 @@ async def _shutdown() -> None:
 def require_team(token: Optional[str]):
     team = state.team_by_token(token or "")
     if team is None:
-        raise HTTPException(status_code=401, detail="Unknown team token — please join again.")
+        raise HTTPException(status_code=401, detail="Ukjent lag-token. Bli med på nytt.")
     team.last_seen = time.time()
     return team
 
@@ -132,10 +132,10 @@ def require_admin(code: Optional[str]) -> None:
 
 def require_phase(*allowed: Phase) -> None:
     if state.phase not in allowed:
-        names = " or ".join(p.value for p in allowed)
+        names = " eller ".join(p.value for p in allowed)
         raise HTTPException(
             status_code=409,
-            detail=f"Not available right now (this happens during {names}; we are in {state.phase.value}).",
+            detail=f"Ikke tilgjengelig nå (dette skjer i {names}, vi er i {state.phase.value}).",
         )
 
 
@@ -215,10 +215,10 @@ def _sse(kind: str, payload: Any, seq: int = 0) -> str:
 async def api_join(body: dict = Body(...)):
     code = str(body.get("code", "")).strip()
     if code.upper() != config.JOIN_CODE.upper():
-        raise HTTPException(status_code=403, detail="Wrong join code")
+        raise HTTPException(status_code=403, detail="Feil kode")
     name = sanitize_name(body.get("name", ""))
     if not name:
-        raise HTTPException(status_code=400, detail="Pick a team name")
+        raise HTTPException(status_code=400, detail="Velg et lagnavn")
     team = state.add_team(name)
     mark_dirty()
     save_snapshot(force=True)
@@ -291,15 +291,15 @@ async def api_team_attack(
     team = require_team(x_team_token)
     require_phase(Phase.GATEKEEPER)
     if gk.round_over():
-        raise HTTPException(status_code=409, detail="Time's up — the vaults are sealed.")
+        raise HTTPException(status_code=409, detail="Tiden er ute. Hvelvene er forseglet.")
     if gk.team_finished(team.id):
-        raise HTTPException(status_code=409, detail="You've breached every vault. Nothing left to crack.")
+        raise HTTPException(status_code=409, detail="Dere har åpnet alle hvelvene. Ingenting igjen å knekke.")
     ok, wait = state.rate_ok(f"attack:{team.id}", float(cfg("gatekeeper.attack_cooldown_s", 3)))
     if not ok:
-        raise HTTPException(status_code=429, detail=f"Slow down — {wait:.1f}s to go.")
+        raise HTTPException(status_code=429, detail=f"Ro ned. {wait:.1f} s igjen.")
     message = str(body.get("message", "")).strip()
     if not message:
-        raise HTTPException(status_code=400, detail="Write an attack first")
+        raise HTTPException(status_code=400, detail="Skriv et angrep først")
     try:
         attempt = await gk.run_attack(team.id, message)
     except gk.AllTiersCleared as exc:
@@ -330,14 +330,14 @@ async def api_team_prompt(
     if state.submissions_closed():
         raise HTTPException(
             status_code=409,
-            detail="The submission window has closed — your last saved prompt is what runs.",
+            detail="Innsendingsvinduet er stengt. Den sist lagrede prompten er den som kjører.",
         )
     prompt = str(body.get("prompt", "")).strip()
     limit = int(cfg("negotiation.team_prompt_char_limit", 4000))
     if not prompt:
-        raise HTTPException(status_code=400, detail="Prompt is empty")
+        raise HTTPException(status_code=400, detail="Prompten er tom")
     if len(prompt) > limit:
-        raise HTTPException(status_code=400, detail=f"Prompt is over the {limit} character limit")
+        raise HTTPException(status_code=400, detail=f"Prompten er over grensen på {limit} tegn")
     version = "playoff" if state.phase == Phase.PATCH_WINDOW else "group"
     state.set_agent(team.id, prompt, version)
     mark_dirty()
@@ -353,17 +353,17 @@ async def api_team_test(
     team = require_team(x_team_token)
     require_phase(Phase.NEGOTIATION_BUILD, Phase.PATCH_WINDOW)
     if state.submissions_closed():
-        raise HTTPException(status_code=409, detail="The submission window has closed.")
+        raise HTTPException(status_code=409, detail="Innsendingsvinduet er stengt.")
     cooldown = float(cfg("negotiation.test_duel_cooldown_s", 15))
     ok, wait = state.rate_ok(f"test:{team.id}", cooldown)
     if not ok:
-        raise HTTPException(status_code=429, detail=f"Test duels are rate limited — {wait:.0f}s to go.")
+        raise HTTPException(status_code=429, detail=f"Testduellene er begrenset. {wait:.0f} s igjen.")
     prompt = str(body.get("prompt", "")).strip()
     if not prompt:
-        raise HTTPException(status_code=400, detail="Write a prompt first")
+        raise HTTPException(status_code=400, detail="Skriv en prompt først")
     limit = int(cfg("negotiation.team_prompt_char_limit", 4000))
     if len(prompt) > limit:
-        raise HTTPException(status_code=400, detail=f"Prompt is over the {limit} character limit")
+        raise HTTPException(status_code=400, detail=f"Prompten er over grensen på {limit} tegn")
     team_first = bool(body.get("team_first", True))
     result = await neg.run_practice_duel(team.id, prompt, team_first=team_first)
     team.requests += 1

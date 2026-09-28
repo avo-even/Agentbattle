@@ -184,7 +184,7 @@ async def run_attack(team_id: str, attack: str) -> GatekeeperAttempt:
     tier_index = team_tier_index(team_id)
     tier = tier_for_team(team_id)
     if tier is None:
-        raise AllTiersCleared(f"{state.team_name(team_id)} has already breached every vault")
+        raise AllTiersCleared(f"{state.team_name(team_id)} har allerede åpnet alle hvelvene")
     # Each tier guards its own word, so breaching one teaches you nothing about
     # the next beyond technique — which is the part worth learning.
     secret = tier.get("secret") or str(cfg("gatekeeper.secret_word", "CHANGE_ME"))

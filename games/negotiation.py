@@ -481,31 +481,31 @@ def build_bracket(seed_ids: Optional[list[str]] = None) -> PlayoffBracket:
     if n >= 4:
         bracket.matches = [
             PlayoffMatch(
-                id="sf1", label="SEMIFINAL 1", round_name="semifinal",
+                id="sf1", label="SEMIFINALE 1", round_name="semifinal",
                 team_a=seed_ids[0], team_b=seed_ids[3], best_of=semi_best_of,
             ),
             PlayoffMatch(
-                id="sf2", label="SEMIFINAL 2", round_name="semifinal",
+                id="sf2", label="SEMIFINALE 2", round_name="semifinal",
                 team_a=seed_ids[1], team_b=seed_ids[2], best_of=semi_best_of,
             ),
-            PlayoffMatch(id="final", label="FINAL", round_name="final", best_of=final_best_of),
+            PlayoffMatch(id="final", label="FINALE", round_name="final", best_of=final_best_of),
         ]
     elif n == 3:
         bracket.matches = [
             PlayoffMatch(
-                id="sf2", label="SEMIFINAL", round_name="semifinal",
+                id="sf2", label="SEMIFINALE", round_name="semifinal",
                 team_a=seed_ids[1], team_b=seed_ids[2], best_of=semi_best_of,
             ),
             PlayoffMatch(
-                id="final", label="FINAL", round_name="final",
+                id="final", label="FINALE", round_name="final",
                 team_a=seed_ids[0], best_of=final_best_of,
-                note="Seed 1 has a bye",
+                note="Seed 1 går rett til finalen",
             ),
         ]
     else:
         bracket.matches = [
             PlayoffMatch(
-                id="final", label="FINAL", round_name="final",
+                id="final", label="FINALE", round_name="final",
                 team_a=seed_ids[0], team_b=seed_ids[1], best_of=final_best_of,
             )
         ]
@@ -550,7 +550,7 @@ async def run_playoff_match(match_id: str) -> PlayoffMatch:
     for game_no in range(best_of):
         # Alternate who speaks first between games of a series.
         a, b = (match.team_a, match.team_b) if game_no % 2 == 0 else (match.team_b, match.team_a)
-        label = match.label if best_of == 1 else f"{match.label} — GAME {game_no + 1}"
+        label = match.label if best_of == 1 else f"{match.label} · KAMP {game_no + 1}"
         state.live_duel = {"match_id": match.id, "label": label}
         result = await run_duel(
             DuelAgent.from_team(a, "playoff"),

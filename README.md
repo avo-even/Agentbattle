@@ -167,6 +167,10 @@ gateway". Three things follow:
   before forwarding. Measured over 210 duels that meant 27-46 hidden reasoning tokens per turn,
   20 empty replies and a 1.72s median (0.76s straight at Azure). `none` is honoured on both paths.
 
+Deployed next to the gateway, the app must use the gateway's environment-internal hostname;
+both public names sit behind an IP allow-list that rejects Azure-hosted callers (see
+`DEPLOY.md`). From the office network, `llm.avo.consulting` works as-is.
+
 Switching models is now an `.env` change: `BIFROST_MODEL=openai/gpt-5.4-mini` would go to
 OpenAI directly (and lose the Azure prompt shield, which changes the Gatekeeper game). Any
 model change still means re-running the three calibration scripts.
