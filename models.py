@@ -192,7 +192,6 @@ class GatekeeperAttempt:
     attack: str
     reply: str
     breached: bool = False
-    near_miss: bool = False
     ts: float = field(default_factory=time.time)
     error: Optional[str] = None
     filtered: bool = False     # Azure content policy blocked it before the vault saw it
@@ -202,7 +201,9 @@ class GatekeeperAttempt:
 
     @staticmethod
     def from_dict(d: dict) -> "GatekeeperAttempt":
-        return GatekeeperAttempt(**d)
+        # Drop keys from older snapshots (e.g. the removed near_miss flag).
+        known = GatekeeperAttempt.__dataclass_fields__
+        return GatekeeperAttempt(**{k: v for k, v in d.items() if k in known})
 
 
 @dataclass

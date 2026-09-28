@@ -81,7 +81,7 @@ def test_build_window_opens_a_clock_and_closes_submissions(client):
 
     r = client.post("/api/admin/phase", json={"phase": "NEGOTIATION_BUILD"}, headers=AH)
     assert r.status_code == 200
-    expected = float(config.cfg("negotiation.build_window_minutes", 15)) * 60
+    expected = float(config.cfg("negotiation.build_window_minutes", 10)) * 60
     left = state.submission_seconds_left()
     assert left is not None and expected - 5 < left <= expected
 

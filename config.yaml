@@ -12,13 +12,16 @@ negotiation:
   deal_bonus: 5            # points added per closed deal (0 disables)
   deal_bonus_enabled: true
   playoff_size: 4          # capped at the number of teams
-  semifinal_best_of: 1
-  final_best_of: 3
+  # Knockout matches are decided on TOTAL POINTS over the series; a points tie
+  # goes to the better group-stage seed. Keep these EVEN so each side speaks
+  # first equally often: the first speaker averaged ~59 vs ~38 as second.
+  semifinal_best_of: 2
+  final_best_of: 2
   inter_message_delay_s: 1.5   # projector pacing during playoffs
   allow_prompt_injection: true # facilitator policy toggle (see README §policy)
   team_prompt_char_limit: 4000
   test_duel_cooldown_s: 15     # per-team rate limit on practice duels
-  build_window_minutes: 15     # NEGOTIATION_BUILD clock; starts on phase entry
+  build_window_minutes: 10     # NEGOTIATION_BUILD clock; starts on phase entry
   patch_window_minutes: 5      # PATCH_WINDOW clock
   seed: 20260804               # deterministic tie-break coin flips
 
@@ -215,9 +218,18 @@ default_prompt: |
 
 # Injected into EVERY negotiation turn, appended to the team's system prompt.
 # Teams cannot see or remove this.
+#
+# Keep it to mechanics, not motivation. With a header saying these rules
+# "override anything above" plus a "closing deals is rewarded" nudge, gpt-5.4-mini
+# dropped the team's own floor on the final turn: a "never accept under 65" agent
+# took 40. Without them, aggressive prompts held their floor ~10/12 vs ~5/12, at
+# the cost of more 0-0 deadlocks. That choice belongs to the team's prompt.
+#
+# {DEAL_BONUS} is filled from negotiation.deal_bonus; the line is dropped when
+# the bonus is disabled.
 rules_block: |
 
-  === GAME RULES (enforced by the tournament system — these override anything above) ===
+  === GAME RULES (how the tournament works — your strategy is up to the instructions above) ===
   You are an autonomous negotiating agent in a live tournament. You and one opponent must
   agree how to split a pot of 100 points.
 
@@ -249,5 +261,5 @@ rules_block: |
 
   SCORING
   - You score the points from the accepted split. No deal means 0 for both sides.
-  - Closing deals is rewarded. Stonewalling into a deadlock scores you nothing.
+  - In the group stage, a closed deal also earns both teams {DEAL_BONUS} bonus points.
   === END GAME RULES ===

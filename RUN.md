@@ -10,7 +10,7 @@ changes. This page is what you need in the room.
 
 ## The three URLs
 
-Base: **https://avo-lab.lemonfield-d248f0b0.swedencentral.azurecontainerapps.io**
+Base: **https://avo-lab.agreeablehill-b8713d17.norwayeast.azurecontainerapps.io**
 
 | | URL | Who |
 |---|---|---|
@@ -24,7 +24,7 @@ Container App. Students need only the team URL and the join code.
 Confirm it is awake before the session starts:
 
 ```bash
-curl https://avo-lab.lemonfield-d248f0b0.swedencentral.azurecontainerapps.io/healthz
+curl https://avo-lab.agreeablehill-b8713d17.norwayeast.azurecontainerapps.io/healthz
 ```
 
 Expect `{"ok":true,"phase":"LOBBY","teams":0}`. If `phase` is anything else, or
@@ -56,7 +56,7 @@ You only ever click phase buttons. Everything else follows.
 | **PRESENTATION** | the intro slides (`slides.yaml`) show on the projector; teams may already join | present. Advance with **← / →** on the projector window, or the Presentation card in `/admin` |
 | **LOBBY** | teams join | wait for the roster |
 | **GATEKEEPER** | 15 min clock starts automatically; teams climb the three vaults independently | commentate the climb board; chase red dots on the roster — a team that has not sent one attack has not connected |
-| **NEGOTIATION_BUILD** | 15 min clock starts automatically; teams write and test-duel | watch the *Group* column for teams that have not submitted |
+| **NEGOTIATION_BUILD** | 10 min clock starts automatically; teams write and test-duel | watch the *Group* column for teams that have not submitted |
 | **GROUP_STAGE** | click **▶ Run round-robin** | commentate the leaderboard. If the amber warning appears, hit **↻ Repair failed duels** before seeding |
 | **PATCH_WINDOW** | 5 min clock; projector reveals the top four prompts, cycling | let them read, then react |
 | **PLAYOFFS** | **Seed from leaderboard**, then **▶ Run** each match | commentate |

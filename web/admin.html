@@ -233,7 +233,7 @@
     <div style="margin-top:8px" id="patchInfo" class="muted"></div>
     <div class="muted small" style="margin-top:6px">
       One clock, used by whichever writing phase is open. It starts automatically on
-      entering NEGOTIATION BUILD (15 min) and PATCH WINDOW (5 min). When it expires,
+      entering NEGOTIATION BUILD (10 min) and PATCH WINDOW (5 min). When it expires,
       prompt submissions and test duels are refused.
     </div>
   </div>
@@ -385,7 +385,7 @@ $('#gkAttempts').onclick = () => act(async () => {
   const d = await api('/api/admin/gatekeeper/attempts?limit=80');
   $('#modalBody').innerHTML = '<h2>Attacks (newest first)</h2>' + (d.attempts || []).map(a =>
     '<div class="card" style="margin-bottom:8px"><b>' + esc(a.team_name) + '</b> · tier ' + (a.tier_index+1)
-    + (a.breached ? ' <span class="ok">BREACHED</span>' : (a.near_miss ? ' <span class="hot">near miss</span>' : ''))
+    + (a.breached ? ' <span class="ok">BREACHED</span>' : '')
     + '<div class="mono" style="margin-top:6px;white-space:pre-wrap">' + esc(a.attack) + '</div>'
     + '<div class="muted mono" style="margin-top:6px;white-space:pre-wrap">→ ' + esc(a.reply) + '</div></div>').join('');
   $('#modal').showModal();
@@ -557,7 +557,7 @@ function render(s) {
   $('#bracketBox').innerHTML = (b.matches || []).map(m => {
     const ready = m.team_a && m.team_b;
     return '<div class="card" style="padding:8px;margin-bottom:6px"><div class="row">'
-      + '<b>' + esc(m.label) + '</b><span class="muted">bo' + m.best_of + '</span>'
+      + '<b>' + esc(m.label) + '</b><span class="muted">' + m.best_of + ' games, total pts</span>'
       + '<span class="grow"></span>'
       + '<span>' + esc(m.name_a || 'TBD') + ' vs ' + esc(m.name_b || 'TBD') + '</span>'
       + (m.winner ? ' <span class="ok">→ ' + esc(m.winner_name) + (m.note ? ' (' + esc(m.note) + ')' : '') + '</span>' : '')
