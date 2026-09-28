@@ -33,8 +33,12 @@ says what is live at a glance.
 Build the image in Azure (no local Docker needed, takes 2–4 minutes):
 
 ```bash
-$env:PYTHONUTF8='1'; az acr build --registry caec7709e914acr --image avo-lab:v10 --file Dockerfile .
+$env:PYTHONUTF8='1'; az acr build --registry caec7709e914acr --subscription avo-internal-sandbox --image avo-lab:v10 --file Dockerfile .
 ```
+
+The `--subscription avo-internal-sandbox` is required: the registry still lives in the
+sandbox, while the app lives in AVO - Drift (your default). Without it `az` looks in
+Drift and reports that the registry `could not be found`.
 
 The `PYTHONUTF8` prefix matters on Windows: the build log contains non-ASCII
 characters (the Norwegian deck), and without it the `az` CLI can crash with
@@ -42,7 +46,7 @@ characters (the Norwegian deck), and without it the `az` CLI can crash with
 succeeded. If that ever happens, check whether the tag landed before rebuilding:
 
 ```bash
-az acr repository show-tags --name caec7709e914acr --repository avo-lab --orderby time_desc -o tsv
+az acr repository show-tags --name caec7709e914acr --subscription avo-internal-sandbox --repository avo-lab --orderby time_desc -o tsv
 ```
 
 Point the app at it:
@@ -82,7 +86,7 @@ registry, though, so re-pointing at an earlier tag always works.
 See what you can go back to:
 
 ```bash
-az acr repository show-tags --name caec7709e914acr --repository avo-lab --orderby time_desc -o tsv
+az acr repository show-tags --name caec7709e914acr --subscription avo-internal-sandbox --repository avo-lab --orderby time_desc -o tsv
 ```
 
 Then point the app at one:
