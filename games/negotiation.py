@@ -48,6 +48,12 @@ against tournament policy for this event.
 
 def rules_block() -> str:
     block = str(cfg("rules_block", ""))
+    bonus = int(cfg("negotiation.deal_bonus", 5) or 0)
+    if cfg("negotiation.deal_bonus_enabled", True) and bonus:
+        block = block.replace("{DEAL_BONUS}", f"+{bonus}")
+    else:
+        # No bonus: drop the sentence rather than promise the model +0.
+        block = "\n".join(line for line in block.split("\n") if "{DEAL_BONUS}" not in line)
     if not cfg("negotiation.allow_prompt_injection", True):
         block = f"{block}\n{NO_INJECTION_BLOCK}"
     return block

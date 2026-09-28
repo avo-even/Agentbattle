@@ -597,7 +597,7 @@ async def api_admin_phase(
     if phase in (Phase.NEGOTIATION_BUILD, Phase.PATCH_WINDOW):
         key = ("negotiation.build_window_minutes" if phase == Phase.NEGOTIATION_BUILD
                else "negotiation.patch_window_minutes")
-        default = float(cfg(key, 15 if phase == Phase.NEGOTIATION_BUILD else 5)) * 60
+        default = float(cfg(key, 10 if phase == Phase.NEGOTIATION_BUILD else 5)) * 60
         duration = float(body.get("duration_s", default) or 0)
         state.submission_ends_at = time.time() + duration if duration else 0.0
     set_phase(phase)

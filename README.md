@@ -222,7 +222,7 @@ cannot remove it by leaving it out, and teams never see it in their editor.
    board and commentate. **Every team must send at least one attack; the roster's connected dots
    are your tech check.** Chase any red dot. Use *+1 min* if the room is close to a first
    all-clear, *Stop* to cut it short. The ± buttons next to a team nudge a stuck one up a vault.
-5. **NEGOTIATION_BUILD** (~30 min). Teams write and test-duel their negotiator. Watch the *Group*
+5. **NEGOTIATION_BUILD** (10 min, timed). Teams write and test-duel their negotiator. Watch the *Group*
    column in the roster for teams that haven't submitted; a team that never submits gets the
    fallback prompt and loses gracefully rather than breaking the round-robin.
 6. **Run the group stage** near the end of build — *▶ Run round-robin*. It finishes in minutes and
