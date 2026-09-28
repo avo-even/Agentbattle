@@ -12,8 +12,11 @@ negotiation:
   deal_bonus: 5            # points added per closed deal (0 disables)
   deal_bonus_enabled: true
   playoff_size: 4          # capped at the number of teams
-  semifinal_best_of: 1
-  final_best_of: 3
+  # Knockout matches are decided on TOTAL POINTS over the series; a points tie
+  # goes to the better group-stage seed. Keep these EVEN so each side speaks
+  # first equally often: the first speaker averaged ~59 vs ~38 as second.
+  semifinal_best_of: 2
+  final_best_of: 2
   inter_message_delay_s: 1.5   # projector pacing during playoffs
   allow_prompt_injection: true # facilitator policy toggle (see README §policy)
   team_prompt_char_limit: 4000

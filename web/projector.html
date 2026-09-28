@@ -608,10 +608,11 @@ function renderBracket(b){
     const liveCls = m.status === 'running' ? ' live' : '';
     const wa = m.winner && m.winner === m.team_a ? ' win' : '';
     const wb = m.winner && m.winner === m.team_b ? ' win' : '';
-    const sa = (m.wins && m.team_a) ? (m.wins[m.team_a] ?? 0) : 0;
-    const sb = (m.wins && m.team_b) ? (m.wins[m.team_b] ?? 0) : 0;
+    // Series are decided on total points, so that is the number to show.
+    const sa = (m.points && m.team_a) ? (m.points[m.team_a] ?? 0) : 0;
+    const sb = (m.points && m.team_b) ? (m.points[m.team_b] ?? 0) : 0;
     return '<div class="match' + liveCls + '"><div class="lbl">' + esc(m.label)
-      + (m.best_of > 1 ? ' · best av ' + m.best_of : '') + '</div>'
+      + (m.best_of > 1 ? ' · ' + m.best_of + ' kamper, sum poeng' : '') + '</div>'
       + '<div class="side' + wa + '"><span>' + esc(m.name_a || 'Ikke avgjort') + '</span><span>' + sa + '</span></div>'
       + '<div class="side' + wb + '"><span>' + esc(m.name_b || 'Ikke avgjort') + '</span><span>' + sb + '</span></div>'
       + (m.note ? '<div class="lbl" style="margin-top:.4vh">' + esc(m.note) + '</div>' : '')

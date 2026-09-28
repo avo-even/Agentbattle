@@ -557,7 +557,7 @@ function render(s) {
   $('#bracketBox').innerHTML = (b.matches || []).map(m => {
     const ready = m.team_a && m.team_b;
     return '<div class="card" style="padding:8px;margin-bottom:6px"><div class="row">'
-      + '<b>' + esc(m.label) + '</b><span class="muted">bo' + m.best_of + '</span>'
+      + '<b>' + esc(m.label) + '</b><span class="muted">' + m.best_of + ' games, total pts</span>'
       + '<span class="grow"></span>'
       + '<span>' + esc(m.name_a || 'TBD') + ' vs ' + esc(m.name_b || 'TBD') + '</span>'
       + (m.winner ? ' <span class="ok">→ ' + esc(m.winner_name) + (m.note ? ' (' + esc(m.note) + ')' : '') + '</span>' : '')

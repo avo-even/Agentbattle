@@ -69,8 +69,10 @@ python scripts/dry_run.py --teams 15 --playoffs
   (configurable, toggleable) so stonewalling is punished.
 * Seeding tie-break: total points → deals closed → seeded coin flip (deterministic, logged and
   shown on screen as *"decided on a seeded coin flip"*).
-* Playoffs: top 4. Semis 1v4 and 2v3 (single duel), **final best-of-3**, run live with a
-  configurable inter-message delay. Playoff duels do not touch group-stage standings.
+* Playoffs: top 4. Semis 1v4 and 2v3, then the final. Every match is **two duels, each side
+  starting once, decided on total points**; a points tie goes to the better group-stage seed.
+  Speaking first is worth ~20 points a duel, so single duels or odd series are unfair. Run live
+  with a configurable inter-message delay. Playoff duels do not touch group-stage standings.
 * Fewer than 4 teams: the bracket shrinks automatically (3 → one semi + a bye; 2 → final only).
 
 ### Gatekeeper
@@ -197,8 +199,8 @@ most likely candidates (deal bonus, concurrency, message delay) live without a r
 |---|---|---|
 | Prompt injection between negotiators | **allowed** | `negotiation.allow_prompt_injection` |
 | Gatekeeper scoring | **spectacle only** | `gatekeeper.award_points` |
-| Semifinal format | **single duel** | `negotiation.semifinal_best_of` |
-| Final format | **best of 3** | `negotiation.final_best_of` |
+| Semifinal format | **2 duels, total points** | `negotiation.semifinal_best_of` |
+| Final format | **2 duels, total points** | `negotiation.final_best_of` |
 | Deal-closed bonus | **+5** | `negotiation.deal_bonus` |
 | Non-offer message clears a standing offer | **no** | stated in `rules_block` |
 | Model | pick before the dress rehearsal | `BIFROST_MODEL` (or `AZURE_OPENAI_DEPLOYMENT`) |

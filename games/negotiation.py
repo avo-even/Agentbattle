@@ -544,7 +544,6 @@ async def run_playoff_match(match_id: str) -> PlayoffMatch:
 
     delay = float(cfg("negotiation.inter_message_delay_s", 1.5))
     best_of = max(1, int(match.best_of))
-    needed = best_of // 2 + 1
 
     match.status = "running"
     match.duel_ids = []
@@ -578,10 +577,10 @@ async def run_playoff_match(match_id: str) -> PlayoffMatch:
             match.wins[match.team_b] += 1
         mark_dirty()
         bus.publish("match_update", _match_payload(match))
-        if max(match.wins.values()) >= needed:
-            break
+        # No early exit: the series is decided on total points, so every game
+        # counts, and an even best_of gives each side the same number of starts.
 
-    match.winner, match.note = _decide_winner(match)
+    match.winner, match.note = _decide_winner(match, bracket.seeds)
     match.status = "complete"
     _advance_bracket(bracket)
     if match.round_name == "final":
@@ -594,16 +593,26 @@ async def run_playoff_match(match_id: str) -> PlayoffMatch:
     return match
 
 
-def _decide_winner(match: PlayoffMatch) -> tuple[str, str]:
+def _decide_winner(match: PlayoffMatch, seeds: Optional[list[str]] = None) -> tuple[str, str]:
+    """Total points over the series, then the better group-stage seed.
+
+    Speaking first is worth ~20 points a duel (anchoring, and the second speaker
+    faces the final accept-or-zero message), so a series is only fair when each
+    side starts equally often and the points, not the duel count, decide it.
+    Mirrored results (60/40 then 40/60) tie on points; the group stage breaks it.
+    """
     a, b = match.team_a, match.team_b
-    if match.wins[a] != match.wins[b]:
-        return (a if match.wins[a] > match.wins[b] else b), ""
     if match.points[a] != match.points[b]:
-        winner = a if match.points[a] > match.points[b] else b
-        return winner, "decided on total points"
+        return (a if match.points[a] > match.points[b] else b), ""
+    if match.wins[a] != match.wins[b]:
+        return (a if match.wins[a] > match.wins[b] else b), "likt på poeng, flest seire"
+    seeds = seeds or []
+    if a in seeds and b in seeds and seeds.index(a) != seeds.index(b):
+        winner = a if seeds.index(a) < seeds.index(b) else b
+        return winner, "likt på poeng, best seedet går videre"
     rng = random.Random(f"{int(cfg('negotiation.seed', 20260804))}:{match.id}")
     winner = rng.choice([a, b])
-    return winner, "decided on a seeded coin flip"
+    return winner, "avgjort med myntkast"
 
 
 def _match_payload(match: PlayoffMatch) -> dict:
