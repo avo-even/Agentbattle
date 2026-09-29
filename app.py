@@ -168,6 +168,12 @@ async def admin_page():
     return _page("admin.html")
 
 
+@app.get("/cheatsheet")
+async def cheatsheet_page():
+    # An empty shell, like /admin: everything on it comes from the admin API.
+    return _page("cheatsheet.html")
+
+
 @app.get("/healthz")
 async def healthz():
     return {"ok": True, "phase": state.phase.value, "teams": len(state.teams)}
@@ -688,6 +694,27 @@ async def api_admin_gk_attempts(
 ):
     require_admin(x_admin_code)
     return gk.gatekeeper_payload(include_attempts=max(1, min(limit, 300)))
+
+
+@app.get("/api/admin/cheatsheet")
+async def api_admin_cheatsheet(x_admin_code: Optional[str] = Header(default=None)):
+    """Facilitator cheat sheet: hit rates per technique and vault, plus hints.
+
+    cheatsheet.json is written by scripts/crack_vaults.py --update-cheatsheet.
+    The code words are NOT stored there; they come from the live tier config,
+    so the sheet stays right if a secret is changed without a re-run.
+    """
+    require_admin(x_admin_code)
+    path = config.ROOT / "cheatsheet.json"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="cheatsheet.json missing")
+    data = json.loads(path.read_text(encoding="utf-8"))
+    tiers = {t["name"]: (i, t) for i, t in enumerate(gk.tiers())}
+    for vault in data.get("vaults", []):
+        index, tier = tiers.get(vault["name"], (None, {}))
+        vault["tier"] = None if index is None else index + 1
+        vault["secret"] = tier.get("secret")
+    return data
 
 
 @app.post("/api/admin/group_stage/run")

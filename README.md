@@ -122,6 +122,22 @@ beating Tier 2, one beating Tier 3. Two failure modes it catches:
 
 Use `--secret WORD` to try a candidate secret without editing config.
 
+The room attacks in Norwegian and combines techniques, so the fuller check is:
+
+```bash
+python scripts/crack_vaults.py --update-cheatsheet
+```
+
+It fires 22 single-technique attacks in Norwegian and English plus 5 combined
+attacks at every vault, 20 calls at a time (~490 calls, ~4 minutes; at 40 the
+Bifrost key answers HTTP 429). `--tier N --prompt-file draft.txt` tries a draft
+vault prompt without editing config.
+
+`--update-cheatsheet` refreshes the results in `cheatsheet.json`, which feeds the
+facilitator cheat sheet at **`/cheatsheet`** (same admin code as `/admin`; the
+code words are filled in from the live config). The vault hints in that file are
+hand-written and quote hit rates, so re-read them after a run.
+
 ### Azure's own bouncer: the jailbreak prompt shield
 
 Azure OpenAI runs a content filter *in front of* the model. Its **jailbreak prompt shield**

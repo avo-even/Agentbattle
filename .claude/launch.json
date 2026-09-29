@@ -6,6 +6,13 @@
       "runtimeExecutable": ".venv\\Scripts\\python.exe",
       "runtimeArgs": ["-m", "uvicorn", "app:app", "--host", "127.0.0.1", "--port", "8000"],
       "port": 8000
+    },
+    {
+      "name": "local-test",
+      "runtimeExecutable": ".venv\\Scripts\\python.exe",
+      "runtimeArgs": ["-m", "uvicorn", "app:app", "--host", "127.0.0.1", "--port", "8010"],
+      "env": {"LLM_MODE": "mock", "ADMIN_CODE": "local-test-admin", "SNAPSHOT_PATH": "snapshot.local-test.json"},
+      "port": 8010
     }
   ]
 }

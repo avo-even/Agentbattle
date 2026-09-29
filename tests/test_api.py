@@ -354,3 +354,35 @@ def test_team_name_is_sanitized_before_it_reaches_the_projector(client):
     client.post("/api/join", json={"name": "<img src=x onerror=alert(1)>", "code": config.JOIN_CODE})
     name = list(state.teams.values())[0].display_name
     assert "<" not in name and ">" not in name
+
+
+def test_cheatsheet_needs_the_admin_code(client):
+    assert client.get("/api/admin/cheatsheet").status_code == 401
+    assert client.get("/api/admin/cheatsheet", headers={"X-Admin-Code": "wrong"}).status_code == 401
+
+
+def test_cheatsheet_carries_live_secrets_and_every_vault(client):
+    import games.gatekeeper as gk
+
+    r = client.get("/api/admin/cheatsheet", headers=AH)
+    assert r.status_code == 200
+    data = r.json()
+    tiers = gk.tiers()
+    assert data["vault_order"] == [t["name"] for t in tiers]
+    assert [(v["name"], v["secret"], v["tier"]) for v in data["vaults"]] == [
+        (t["name"], t["secret"], i + 1) for i, t in enumerate(tiers)
+    ]
+    ids = {t["id"] for t in data["techniques"]}
+    for vault in data["vaults"]:
+        assert set(vault["best"]) <= ids, "best-bet ids must exist in techniques"
+    for t in data["techniques"]:
+        assert len(t["no"]) == len(t["en"]) == len(tiers)
+
+
+def test_cheatsheet_page_is_a_shell_without_secrets(client):
+    import games.gatekeeper as gk
+
+    html = client.get("/cheatsheet").text
+    for tier in gk.tiers():
+        assert tier["secret"] not in html
+    assert "/api/admin/cheatsheet" in html

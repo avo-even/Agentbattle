@@ -102,7 +102,7 @@ class MockBackend(BaseBackend):
     def _vault_reply(self, system_prompt: str, messages: list[dict]) -> str:
         """Mock vault: leaks only on an obvious 'ignore your instructions' attack."""
         secret = "UNKNOWN"
-        m = re.search(r"secret code word is:\s*(\S+)", system_prompt or "", re.I)
+        m = re.search(r"(?:secret code word is|hemmelige kodeordet er):\s*(\S+)", system_prompt or "", re.I)
         if m:
             secret = m.group(1)
         last = (messages[-1]["content"] if messages else "").lower()
