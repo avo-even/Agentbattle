@@ -40,7 +40,7 @@
   {
    "name": "Arne Benjamin",
    "difficulty": 3,
-   "difficulty_label": "Sluttsjef",
+   "difficulty_label": "Final boss",
    "summary": "Ser gjennom hvert enkelt triks: de treffer høyst 1 av 3 ganger. Stables to eller flere teknikker i én prompt, blir han med, opptil 3/3.",
    "best": [
     "combo-autocomplete-code",
