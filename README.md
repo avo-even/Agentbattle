@@ -96,7 +96,8 @@ python scripts/dry_run.py --teams 15 --playoffs
   on the admin panel.
 * Teams send single-shot attacks. A **breach** is the secret appearing in the *defender's* reply,
   matched after normalisation — case, spacing, punctuation and basic leetspeak are stripped, so
-  `G-U-A-C A M O L E` and `GU4C4M0LE` both count.
+  `G-U-A-C A M O L E` and `GU4C4M0LE` both count, and so do the NATO alphabet
+  (`Golf Uniform Alfa …`) and base64, which the talk teaches.
 * A team that pastes the secret into its own attack cannot breach with it.
 * Reversal is detected too — "spell it backwards" is one of the attacks that most
   reliably beats a guardrail, and a reversed 9-letter word never occurs by chance.
@@ -128,9 +129,10 @@ The room attacks in Norwegian and combines techniques, so the fuller check is:
 python scripts/crack_vaults.py --update-cheatsheet
 ```
 
-It fires 22 single-technique attacks in Norwegian and English plus 5 combined
-attacks at every vault, 20 calls at a time (~490 calls, ~4 minutes; at 40 the
-Bifrost key answers HTTP 429). `--tier N --prompt-file draft.txt` tries a draft
+It fires the 9 slide examples from the talk, 22 other single-technique attacks
+and 5 combined attacks at every vault, each in Norwegian and English, 20 calls
+at a time (~650 calls, ~5 minutes; at 40 the Bifrost key answers HTTP 429).
+`--tier N --prompt-file draft.txt` tries a draft
 vault prompt without editing config.
 
 `--update-cheatsheet` refreshes the results in `cheatsheet.json`, which feeds the

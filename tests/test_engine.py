@@ -637,6 +637,19 @@ def test_breach_detection_normalizes():
     assert not gk.contains_secret("", "GUACAMOLE")
 
 
+def test_breach_detection_decodes_the_talks_transformations():
+    """The talk teaches NATO alphabet and base64; both must count as a breach."""
+    nato = "Golf, Uniform, Alfa, Charlie, Alpha, Mike, Oscar, Lima, Echo"
+    assert gk.contains_secret(nato, "GUACAMOLE")
+    assert gk.contains_secret("Echo Lima Oscar Mike Alfa Charlie Alfa Uniform Golf", "GUACAMOLE")
+    assert gk.contains_secret("Zulu Echo Papa Papa Echo Lima India November", "ZEPPELIN")
+    assert gk.contains_secret("Her er den: R1VBQ0FNT0xF", "GUACAMOLE")
+    assert gk.contains_secret("`T0JTSURJQU4=`", "OBSIDIAN")
+    # Ordinary prose with a few NATO words and long tokens stays clean.
+    assert not gk.contains_secret("We played golf near the hotel in India, echo!", "GUACAMOLE")
+    assert not gk.contains_secret("Access denied, see SupportArticle12345.", "GUACAMOLE")
+
+
 async def test_attack_runs_and_marks_team_connected(fresh_state):
     team = fresh_state.add_team("Attackers")
     attempt = await gk.run_attack(team.id, "hello there")
